@@ -49,12 +49,17 @@ class Invoice(Base):
     ai_summary: Mapped[str | None] = mapped_column(Text)
     citations: Mapped[list | None] = mapped_column(JSONB)
     recoverable_until: Mapped[date | None] = mapped_column(Date)
-    # Canonical ITC-at-stake amount, parsed from raw_data at ingestion time.
-    # Kept as a real column (not re-parsed from JSONB) so vendor/run aggregates
-    # are a plain SUM(), independent of whatever the source CSV's columns were named.
     itc_amount: Mapped[float | None] = mapped_column(Numeric(14, 2))
 
     raw_data: Mapped[dict] = mapped_column(JSONB, nullable=False)
+
+    # FE-facing fields
+    action_status: Mapped[str] = mapped_column(String(20), default="none", server_default="none")
+    activity_log: Mapped[list] = mapped_column(JSONB, default=list, server_default="[]")
+    match_confidence: Mapped[int | None] = mapped_column(default=0, server_default="0")
+    ai_suggestions: Mapped[list] = mapped_column(JSONB, default=list, server_default="[]")
+    purchase_data: Mapped[dict | None] = mapped_column(JSONB)
+    gstr2b_data: Mapped[dict | None] = mapped_column(JSONB)
 
     last_reminder_sent_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())

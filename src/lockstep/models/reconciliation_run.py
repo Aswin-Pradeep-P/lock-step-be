@@ -16,10 +16,10 @@ class ReconciliationRun(Base):
         UUID(as_uuid=True), primary_key=True, server_default=func.gen_random_uuid()
     )
     name: Mapped[str] = mapped_column(String(255), nullable=False)
-    invoice_ledger_file_url: Mapped[str] = mapped_column(Text, nullable=False)
-    gstr2b_file_url: Mapped[str] = mapped_column(Text, nullable=False)
-    created_by: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), ForeignKey("users.id"), nullable=False
+    invoice_ledger_file_url: Mapped[str | None] = mapped_column(Text)
+    gstr2b_file_url: Mapped[str | None] = mapped_column(Text)
+    created_by: Mapped[uuid.UUID | None] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("users.id"), nullable=True
     )
     status: Mapped[str] = mapped_column(
         String(50), nullable=False, default=RunStatus.PROCESSING.value,
