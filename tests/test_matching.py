@@ -29,6 +29,7 @@ def _row(
     vendor_name: str = "Sharma Traders",
     itc_available: bool | None = None,
     itc_reason: str = "",
+    description: str = "",
 ) -> CanonicalRow:
     return CanonicalRow(
         row_index=0,
@@ -47,6 +48,7 @@ def _row(
         invoice_date=invoice_date,
         itc_available=itc_available,
         itc_reason=itc_reason,
+        description=description,
         raw={"Invoice No": invoice_number},
     )
 
@@ -99,6 +101,15 @@ def test_clerical_reason_quotes_both_spellings():
     assert "INV-007" in result.match_reason and "INV-7" in result.match_reason
 
 
+def test_clerical_typo_does_not_mask_itc_ineligibility():
+    """A typo and a Sec 17(5)/ITC block can coexist — the block must win the status."""
+    ledger = [_row("INV-007")]
+    gstr2b = [_row("INV-7", itc_available=False, itc_reason="ITC restricted under Section 17(5)")]
+    result = _only(match_invoices(ledger, gstr2b))
+    assert result.status == InvoiceMatchStatus.ITC_INELIGIBLE
+    assert "Section 17(5)" in result.match_reason
+
+
 # --- Tier 3: AMOUNT_MISMATCH ------------------------------------------------------
 
 def test_amount_mismatch_when_tax_differs():
@@ -131,6 +142,21 @@ def test_missing_in_gstr2b_reason_names_the_vendor_and_the_amount():
     result = _only(match_invoices([_row("INV-1", tax="1840.00")], []))
     assert "Sharma Traders" in result.match_reason
     assert "₹1,840.00" in result.match_reason
+
+
+def test_missing_in_gstr2b_hints_sec17_5_for_a_blocked_category_description():
+    """The lead pitch-deck example: a catering invoice is a category risk regardless
+    of whether the vendor ever files — this is advisory only, status stays MISSING."""
+    result = _only(
+        match_invoices([_row("INV-1", description="Monthly canteen contract")], [])
+    )
+    assert result.status == InvoiceMatchStatus.MISSING_IN_GSTR2B
+    assert "Sec 17(5)" in result.match_reason
+
+
+def test_missing_in_gstr2b_has_no_sec17_5_hint_for_an_ordinary_purchase():
+    result = _only(match_invoices([_row("INV-1", description="Steel rods")], []))
+    assert "Sec 17(5)" not in result.match_reason
 
 
 def test_different_gstin_is_not_a_match():

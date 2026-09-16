@@ -14,7 +14,13 @@ class Vendor(Base):
     id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True), primary_key=True, server_default=func.gen_random_uuid()
     )
-    gstin: Mapped[str] = mapped_column(String(15), unique=True, nullable=False, index=True)
+    # Null for an "unverified" vendor: a supplier who never filed and whose GSTIN a
+    # Tally ledger never carried, so it could never be resolved by name against a 2B
+    # row either. Uniqueness on a real GSTIN, and on `unverified_key` for a made-up
+    # one, are both partial indexes — see the migration — so the two never collide.
+    gstin: Mapped[str | None] = mapped_column(String(15), index=True)
+    gstin_verified: Mapped[bool] = mapped_column(Boolean, default=True, server_default="true")
+    unverified_key: Mapped[str | None] = mapped_column(String(255))
     name: Mapped[str] = mapped_column(String(255), nullable=False)
     contact_email: Mapped[str | None] = mapped_column(String(255))
     contact_phone: Mapped[str | None] = mapped_column(String(20))

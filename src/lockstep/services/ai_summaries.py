@@ -16,7 +16,7 @@ from decimal import Decimal
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from lockstep.config import get_settings
+from lockstep.config import Settings, get_settings
 from lockstep.models.enums import AT_RISK_STATUSES
 from lockstep.models.invoice import Invoice
 from lockstep.services.periods import days_to_cutoff
@@ -101,13 +101,9 @@ def fallback_summary(vendor: VendorRiskRow, tax_period: str | None) -> str:
     return " ".join(parts)
 
 
-async def vendor_summary(
-    db: AsyncSession, vendor: VendorRiskRow, tax_period: str | None
-) -> str:
-    settings = get_settings()
+async def _call_anthropic(settings: Settings, user_content: str) -> str | None:
     if not settings.anthropic_api_key:
-        return fallback_summary(vendor, tax_period)
-
+        return None
     try:
         from anthropic import AsyncAnthropic
 
@@ -116,24 +112,82 @@ async def vendor_summary(
             model=settings.anthropic_model,
             max_tokens=250,
             system=_SYSTEM,
-            messages=[{"role": "user", "content": "\n".join(_facts(vendor, tax_period))}],
+            messages=[{"role": "user", "content": user_content}],
         )
-        return "".join(block.text for block in response.content if block.type == "text").strip()
+        text = "".join(block.text for block in response.content if block.type == "text").strip()
+        return text or None
     except Exception:
-        # A summary is never worth failing a reconciliation over.
-        return fallback_summary(vendor, tax_period)
+        return None
+
+
+async def _call_groq(settings: Settings, user_content: str) -> str | None:
+    """Same prompt, same contract, an OpenAI-compatible chat-completions call — used
+    only when there's no working Anthropic key. Matching stays rule-only regardless
+    of which provider narrates; this never sees or changes a status."""
+    if not settings.groq_api_key:
+        return None
+    try:
+        import httpx
+
+        async with httpx.AsyncClient(timeout=15) as client:
+            response = await client.post(
+                "https://api.groq.com/openai/v1/chat/completions",
+                headers={"Authorization": f"Bearer {settings.groq_api_key}"},
+                json={
+                    "model": settings.groq_model,
+                    "max_tokens": 250,
+                    # The default model is a reasoning model — without this, its own
+                    # reasoning tokens can eat the entire max_tokens budget before
+                    # any visible text comes out (confirmed: ~260 reasoning tokens
+                    # at default effort vs ~25 at "low", for a task this short).
+                    "reasoning_effort": "low",
+                    "messages": [
+                        {"role": "system", "content": _SYSTEM},
+                        {"role": "user", "content": user_content},
+                    ],
+                },
+            )
+            response.raise_for_status()
+            text = response.json()["choices"][0]["message"]["content"].strip()
+            return text or None
+    except Exception:
+        return None
+
+
+async def vendor_summary(
+    db: AsyncSession, vendor: VendorRiskRow, tax_period: str | None
+) -> str:
+    settings = get_settings()
+    user_content = "\n".join(_facts(vendor, tax_period))
+
+    for provider in (_call_anthropic, _call_groq):
+        text = await provider(settings, user_content)
+        if text:
+            return text
+
+    # A summary is never worth failing a reconciliation over.
+    return fallback_summary(vendor, tax_period)
 
 
 async def draft_vendor_email(
     db: AsyncSession, vendor: VendorRiskRow, period_id, tax_period: str | None
 ) -> dict:
     """Generate and store the draft. We never actually send — the action is logged."""
+    from lockstep.services.dashboard import latest_check_id
+
+    check_id = await latest_check_id(db, period_id)
     invoices = (
         await db.execute(
             select(Invoice).where(
                 Invoice.vendor_id == vendor.vendor_id,
                 Invoice.period_id == period_id,
+                Invoice.check_id == check_id,
                 Invoice.status.in_(AT_RISK_STATUSES),
+                # An AMOUNT_MISMATCH pair writes both sides with the same status;
+                # without this an invoice with a mismatch is listed twice, once per
+                # side, each with a different tax figure (see vendor_scoring's
+                # matching guard on the same query shape).
+                Invoice.source != "GSTR2B",
             )
         )
     ).scalars().all()
@@ -159,9 +213,18 @@ async def draft_vendor_email(
         f"If you have already filed, please share the ARN and ignore this note.\n\n"
         f"Regards"
     )
+    # A drafted email with nowhere to send it is not a success — surfacing that
+    # explicitly is what lets the UI show "vendor info for reminder not present"
+    # instead of a button that silently does nothing.
+    can_send = bool(vendor.contact_email)
     return {
         "to": vendor.contact_email,
         "subject": f"GSTR-1 filing: {len(invoices)} invoice(s) pending before the 13th",
         "body": body,
         "invoice_numbers": [i.invoice_number for i in invoices],
+        "can_send": can_send,
+        "reason": (
+            None if can_send
+            else "No email on file for this vendor — cannot send a reminder."
+        ),
     }

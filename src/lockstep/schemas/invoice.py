@@ -5,6 +5,7 @@ from decimal import Decimal
 from pydantic import BaseModel, ConfigDict
 
 from lockstep.models.invoice import Invoice
+from lockstep.services.risk_rules import days_remaining, is_window_open
 
 
 class InvoiceSideOut(BaseModel):
@@ -48,7 +49,14 @@ class InvoiceOut(BaseModel):
     itc_reason: str | None
     is_reverse_charge: bool
     supplier_filed_at: date | None
+    description: str | None
+
+    # Sec 16(4): the date is stored on every invoice, but until now nothing ever
+    # compared it to today — computed here, at read time, so it can't go stale the
+    # way persisting a boolean at match time would.
     recoverable_until: date | None
+    days_to_recover: int | None
+    window_open: bool | None
 
     counterpart: InvoiceSideOut | None = None
     created_at: datetime
@@ -57,6 +65,7 @@ class InvoiceOut(BaseModel):
     def build(
         cls, invoice: Invoice, vendor_name: str | None = None, counterpart: Invoice | None = None
     ) -> "InvoiceOut":
+        deadline = invoice.recoverable_until
         return cls(
             id=invoice.id,
             period_id=invoice.period_id,
@@ -80,7 +89,10 @@ class InvoiceOut(BaseModel):
             itc_reason=invoice.itc_reason,
             is_reverse_charge=invoice.is_reverse_charge,
             supplier_filed_at=invoice.supplier_filed_at,
-            recoverable_until=invoice.recoverable_until,
+            description=invoice.description,
+            recoverable_until=deadline,
+            days_to_recover=days_remaining(deadline) if deadline else None,
+            window_open=is_window_open(deadline) if deadline else None,
             counterpart=(
                 InvoiceSideOut(
                     invoice_number=counterpart.invoice_number,

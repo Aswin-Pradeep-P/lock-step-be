@@ -80,7 +80,8 @@ def predicted_late(stats: FilingStats, filed_this_period: bool) -> bool:
 class VendorRiskRow:
     vendor_id: str
     name: str
-    gstin: str
+    gstin: str | None
+    gstin_verified: bool
     contact_email: str | None
     periods_observed: int
     on_time_rate: float | None
@@ -109,7 +110,13 @@ async def get_vendor_risk(
         func.coalesce(
             func.sum(Invoice.igst + Invoice.cgst + Invoice.sgst + Invoice.cess), 0
         ).label("exposure"),
-    ).where(Invoice.status.in_(AT_RISK_STATUSES)).group_by(Invoice.vendor_id)
+    ).where(
+        Invoice.status.in_(AT_RISK_STATUSES),
+        # An AMOUNT_MISMATCH pair writes both sides; count the ledger side only so
+        # exposure and the missing-invoice count aren't doubled (mirrors the same
+        # guard in dashboard.period_headline).
+        Invoice.source != "GSTR2B",
+    ).group_by(Invoice.vendor_id)
     if period_id is not None:
         if check_id is None:
             from lockstep.services.dashboard import latest_check_id
@@ -147,6 +154,7 @@ async def get_vendor_risk(
                 vendor_id=str(vendor.id),
                 name=vendor.name,
                 gstin=vendor.gstin,
+                gstin_verified=vendor.gstin_verified,
                 contact_email=vendor.contact_email,
                 periods_observed=stats.periods_observed,
                 on_time_rate=stats.on_time_rate,

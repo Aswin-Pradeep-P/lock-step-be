@@ -21,6 +21,7 @@ from decimal import Decimal
 
 from lockstep.models.enums import InvoiceMatchStatus
 from lockstep.services.ingestion import CanonicalRow
+from lockstep.services.risk_rules import sec17_5_hint
 
 #: ±₹1 absolute, for rounding only. Not a percentage — a 1% tolerance on ₹10,00,000
 #: silently swallows a ₹10,000 error.
@@ -134,7 +135,13 @@ def match_invoices(
         )
         if matched is not None:
             unmatched_2b.discard(matched)
-            results.append(_pair(ledger_row, gstr2b_rows[matched]))
+            results.append(
+                _classify_matched_pair(
+                    ledger_row, gstr2b_rows[matched], InvoiceMatchStatus.EXACT_MATCH,
+                    f"Invoice {ledger_row.invoice_number} matches GSTR-2B on vendor GSTIN, "
+                    f"invoice number, date and {_money(gstr2b_rows[matched].total_tax)} of tax.",
+                )
+            )
             continue
 
         # Tier 3 — same invoice number and GSTIN, tax differs. A wrong amount, not a typo.
@@ -181,7 +188,7 @@ def match_invoices(
         unmatched_2b.discard(matched)
         gstr2b_row = gstr2b_rows[matched]
         results.append(
-            MatchResult(
+            _classify_matched_pair(
                 ledger_row, gstr2b_row, InvoiceMatchStatus.CLERICAL_MISMATCH,
                 f"Same vendor and same tax, but the invoice number is written "
                 f"'{ledger_row.invoice_number}' in your books and "
@@ -193,13 +200,21 @@ def match_invoices(
     # This is the one that matters: actionable before the 13th.
     for l_idx in still_unmatched_ledger:
         ledger_row = ledger_rows[l_idx]
-        results.append(
-            MatchResult(
-                ledger_row, None, InvoiceMatchStatus.MISSING_IN_GSTR2B,
-                f"Invoice {ledger_row.invoice_number} is in your purchase ledger but has not "
-                f"appeared in GSTR-2B — {ledger_row.vendor_name or 'the supplier'} has not "
-                f"filed it. {_money(ledger_row.itc_amount)} of ITC is at risk.",
+        reason = (
+            f"Invoice {ledger_row.invoice_number} is in your purchase ledger but has not "
+            f"appeared in GSTR-2B — {ledger_row.vendor_name or 'the supplier'} has not "
+            f"filed it. {_money(ledger_row.itc_amount)} of ITC is at risk."
+        )
+        # There's no 2B row here to check ITC Availability against, but the
+        # description can still carry a hint that this was never claimable to begin
+        # with — advisory only, it never changes the status: a CA must still verify.
+        if sec17_5_hint(ledger_row.description):
+            reason += (
+                " This description also matches a category commonly blocked under "
+                "Sec 17(5) — verify eligibility independently of whether the vendor files."
             )
+        results.append(
+            MatchResult(ledger_row, None, InvoiceMatchStatus.MISSING_IN_GSTR2B, reason)
         )
 
     # Tiers 5 and 6 — 2B rows nobody claimed.
@@ -228,20 +243,26 @@ def match_invoices(
     return results
 
 
-def _pair(ledger_row: CanonicalRow, gstr2b_row: CanonicalRow) -> MatchResult:
-    """Tier 1, with ITC eligibility taking precedence — a matched-but-unclaimable
-    invoice is not a clean match."""
+def _classify_matched_pair(
+    ledger_row: CanonicalRow,
+    gstr2b_row: CanonicalRow,
+    ok_status: InvoiceMatchStatus,
+    ok_reason: str,
+) -> MatchResult:
+    """Any ledger/2B pair, with ITC eligibility always taking precedence.
+
+    Used by both Tier 1 (exact) and Tier 2 (clerical) — a matched-but-unclaimable
+    invoice is never a clean match or a mere typo, regardless of which tier found it.
+    Checking this in one shared place means a future tier can't reintroduce the bug
+    where a clerical typo silently masked a Sec 17(5)/ITC-blocked invoice.
+    """
     if gstr2b_row.itc_available is False:
         reason = gstr2b_row.itc_reason or "the portal marks it unavailable"
         return MatchResult(
             ledger_row, gstr2b_row, InvoiceMatchStatus.ITC_INELIGIBLE,
             f"Matched to GSTR-2B, but ITC is not available on this invoice: {reason}.",
         )
-    return MatchResult(
-        ledger_row, gstr2b_row, InvoiceMatchStatus.EXACT_MATCH,
-        f"Invoice {ledger_row.invoice_number} matches GSTR-2B on vendor GSTIN, invoice "
-        f"number, date and {_money(gstr2b_row.total_tax)} of tax.",
-    )
+    return MatchResult(ledger_row, gstr2b_row, ok_status, ok_reason)
 
 
 def carry_forward_reason(tax_period: str, invoice_number: str) -> str:

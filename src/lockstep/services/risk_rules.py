@@ -18,7 +18,7 @@ SEC16_4_DEADLINE_DAY = 30
 # Informational only — the AI classifier makes the final ineligibility call
 # from the invoice description, this just seeds the prompt with a hint.
 SEC17_5_HINT_KEYWORDS = [
-    "catering", "food", "beverage", "outdoor catering", "health service",
+    "catering", "food", "beverage", "outdoor catering", "canteen", "health service",
     "life insurance", "health insurance", "membership of a club", "club membership",
     "travel benefit", "leave travel", "motor vehicle", "works contract",
     "rent-a-cab", "cab service", "employee insurance",

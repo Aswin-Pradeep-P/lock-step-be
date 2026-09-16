@@ -1,6 +1,8 @@
+import io
 from datetime import date
 from decimal import Decimal
 
+import openpyxl
 import pytest
 
 from lockstep.core.exceptions import IngestionError
@@ -10,6 +12,7 @@ from lockstep.services.ingestion import (
     parse_bool,
     parse_csv,
     parse_date,
+    parse_excel,
     resolve_columns,
     to_canonical_rows,
 )
@@ -151,3 +154,103 @@ def test_itc_amount_falls_back_to_taxable_value_without_tax_columns():
     content = b"Invoice No,Supplier GSTIN,Taxable Value\nINV-1,29ABCDE1234F1Z5,1000\n"
     rows, columns = parse_csv(content)
     assert to_canonical_rows(rows, columns)[0].itc_amount == Decimal("1000.00")
+
+
+def test_taxable_value_is_not_confused_with_invoice_value():
+    """A real GSTR-2B export carries both columns — 'Invoice Value(₹)' includes tax,
+    'Taxable Value (₹)' doesn't, and only the latter is the canonical field."""
+    columns = [
+        "GSTIN of supplier", "Invoice number", "Invoice Value(₹)", "Taxable Value (₹)",
+    ]
+    resolved = resolve_columns(columns)
+    assert resolved["taxable_value"] == "Taxable Value (₹)"
+
+
+def test_parse_amount_ignores_currency_suffix_in_header_matching():
+    content = (
+        b"Invoice number,GSTIN of supplier,Taxable Value (\xe2\x82\xb9)\n"
+        b"INV-1,29ABCDE1234F1Z5,1000\n"
+    )
+    rows, columns = parse_csv(content)
+    assert columns["taxable_value"] == "Taxable Value (₹)"
+    assert to_canonical_rows(rows, columns)[0].taxable_value == Decimal("1000.00")
+
+
+def _two_row_header_workbook() -> bytes:
+    """Build the real GSTR-2B portal shape in memory: a parent header row with
+    spanning labels ('Invoice Details', 'Tax Amount') and a child sub-header row
+    directly below it (mirrors the vendor-supplied 'GST - Igst.xlsx' fixture)."""
+    wb = openpyxl.Workbook()
+    ws = wb.active
+    ws.title = "GSTR 2B"
+    ws.append(["Goods and Services Tax - GSTR-2B"])
+    ws.append([])
+    ws.append(["Taxable inward supplies received from registered persons"])
+    ws.append([
+        "GSTIN of supplier", "Trade/Legal name", "Invoice Details", None, None, None,
+        "Place of supply", "Supply Attract Reverse Charge", "Taxable Value (₹)",
+        "Tax Amount", None, None, None,
+        "GSTR-1/IFF/GSTR-5 Period", "GSTR-1/IFF/GSTR-5 Filing Date",
+        "ITC Availability", "Reason",
+    ])
+    ws.append([
+        None, None, "Invoice number", "Invoice type", "Invoice Date", "Invoice Value(₹)",
+        None, None, None, "Integrated Tax(₹)", "Central Tax(₹)", "State/UT Tax(₹)", "Cess(₹)",
+        None, None, None, None,
+    ])
+    ws.append([
+        "29ABCDE1234F1Z5", "Sharma Traders", "INV-1", "Regular", "2026-08-05", 118000,
+        "29-Karnataka", "N", 100000, 18000, 0, 0, 0, "082026", "2026-09-10", "Yes", "",
+    ])
+    buffer = io.BytesIO()
+    wb.save(buffer)
+    return buffer.getvalue()
+
+
+def test_parse_excel_merges_a_two_row_portal_header():
+    rows, columns = parse_excel(_two_row_header_workbook())
+
+    assert len(rows) == 1
+    assert columns["invoice_number"] == "Invoice number"
+    assert columns["gstin"] == "GSTIN of supplier"
+    assert columns["taxable_value"] == "Taxable Value (₹)"
+    assert columns["integrated_tax"] == "Integrated Tax(₹)"
+    row = to_canonical_rows(rows, columns)[0]
+    assert row.invoice_number == "INV-1"
+    assert row.taxable_value == Decimal("100000.00")
+    assert row.igst == Decimal("18000.00")
+
+
+def test_parse_excel_picks_the_named_sheet_out_of_a_multi_sheet_workbook():
+    """A single Tally export can bundle an IGST ledger, a CGST/SGST ledger and the
+    GSTR-2B download as three sheets of one workbook."""
+    wb = openpyxl.load_workbook(io.BytesIO(_two_row_header_workbook()))
+    wb.create_sheet("Tally -IGST")
+    buffer = io.BytesIO()
+    wb.save(buffer)
+
+    rows, columns = parse_excel(buffer.getvalue(), hint="gstr2b")
+    assert len(rows) == 1
+    assert columns["invoice_number"] == "Invoice number"
+
+
+def test_normalize_gstin_rejects_the_wrong_length():
+    """An overlong GSTIN is a data-entry error or the wrong column mapped — never
+    truncate it into a different, wrong-but-valid-looking one."""
+    from lockstep.services.ingestion import normalize_gstin
+
+    assert normalize_gstin("29ABCDE1234F1Z5") == "29ABCDE1234F1Z5"
+    assert normalize_gstin("29ABCDE1234F1Z5EXTRA") == ""
+    assert normalize_gstin("29ABC") == ""
+    assert normalize_gstin("") == ""
+
+
+def test_vendor_email_and_phone_are_captured_when_present():
+    content = (
+        b"Invoice No,Supplier GSTIN,Taxable Value,Vendor Email,Contact No\n"
+        b"INV-1,29ABCDE1234F1Z5,1000,accounts@example.com,9876543210\n"
+    )
+    rows, columns = parse_csv(content)
+    row = to_canonical_rows(rows, columns)[0]
+    assert row.vendor_email == "accounts@example.com"
+    assert row.vendor_phone == "9876543210"

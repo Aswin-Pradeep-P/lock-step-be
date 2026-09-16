@@ -10,7 +10,8 @@ class VendorRiskOut(BaseModel):
 
     vendor_id: str
     name: str
-    gstin: str
+    gstin: str | None
+    gstin_verified: bool
     contact_email: str | None
     periods_observed: int
     on_time_rate: float | None
@@ -34,7 +35,8 @@ class FilingHistoryOut(BaseModel):
 class VendorDetailOut(BaseModel):
     id: uuid.UUID
     name: str
-    gstin: str
+    gstin: str | None
+    gstin_verified: bool
     contact_email: str | None
     contact_phone: str | None
     risk: VendorRiskOut | None

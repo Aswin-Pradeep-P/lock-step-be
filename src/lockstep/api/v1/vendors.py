@@ -75,6 +75,7 @@ async def get_vendor(
         id=vendor.id,
         name=vendor.name,
         gstin=vendor.gstin,
+        gstin_verified=vendor.gstin_verified,
         contact_email=vendor.contact_email,
         contact_phone=vendor.contact_phone,
         risk=VendorRiskOut(**vars(risk)) if risk else None,

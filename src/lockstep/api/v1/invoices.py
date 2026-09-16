@@ -14,6 +14,7 @@ from lockstep.models.invoice import Invoice
 from lockstep.models.user import User
 from lockstep.models.vendor import Vendor
 from lockstep.schemas.invoice import InvoiceOut
+from lockstep.services.dashboard import latest_check_id
 
 router = APIRouter(prefix="/periods/{period_id}/invoices", tags=["invoices"])
 
@@ -34,8 +35,12 @@ async def _load(
     vendor_id: uuid.UUID | None,
     limit: int,
     offset: int,
+    check_id: uuid.UUID | None = None,
 ) -> list[Invoice]:
-    query = select(Invoice).where(Invoice.period_id == period_id)
+    # A period holds many checks; without pinning to one, re-running a check before
+    # the 13th would make every invoice appear once per check it was ever part of.
+    check_id = check_id or await latest_check_id(db, period_id)
+    query = select(Invoice).where(Invoice.period_id == period_id, Invoice.check_id == check_id)
     parsed = _parse_status(status_filter)
     if parsed:
         query = query.where(Invoice.status == parsed)
@@ -91,12 +96,15 @@ async def list_invoices(
     period_id: uuid.UUID,
     status_filter: str | None = Query(None, alias="status"),
     vendor_id: uuid.UUID | None = Query(None),
+    check_id: uuid.UUID | None = Query(
+        None, description="Defaults to the period's latest check; pass to view an earlier check."
+    ),
     limit: int = Query(500, le=5000),
     offset: int = Query(0, ge=0),
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
-    invoices = await _load(db, period_id, status_filter, vendor_id, limit, offset)
+    invoices = await _load(db, period_id, status_filter, vendor_id, limit, offset, check_id)
     return await _decorate(db, invoices)
 
 
@@ -105,11 +113,12 @@ async def export_invoices(
     period_id: uuid.UUID,
     status_filter: str | None = Query(None, alias="status"),
     vendor_id: uuid.UUID | None = Query(None),
+    check_id: uuid.UUID | None = Query(None),
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
     """CSV export honouring the active filters."""
-    invoices = await _load(db, period_id, status_filter, vendor_id, 100_000, 0)
+    invoices = await _load(db, period_id, status_filter, vendor_id, 100_000, 0, check_id)
     rows = await _decorate(db, invoices)
 
     fieldnames = [

@@ -67,6 +67,17 @@ CANONICAL_ALIASES: dict[str, list[str]] = {
     ],
     "invoice_type": ["invoice type", "document type", "voucher type"],
     "description": ["description", "item description", "hsn description", "narration"],
+    # Not part of any government export — only ever present if a buyer's own
+    # purchase register or vendor master carries it. When it is, it's the only way
+    # a "nudge the vendor" reminder can ever have somewhere real to go.
+    "vendor_email": [
+        "vendor email", "supplier email", "contact email", "email", "email id",
+        "email address",
+    ],
+    "vendor_phone": [
+        "vendor phone", "supplier phone", "contact phone", "contact no", "contact number",
+        "phone", "phone number", "mobile", "mobile number",
+    ],
 }
 
 REQUIRED_CANONICAL_FIELDS = ("invoice_number", "taxable_value")
@@ -80,8 +91,19 @@ _FALSEISH = {"n", "no", "false", "0", "f"}
 _MAX_HEADER_SCAN = 10  # portal 2B exports bury the real header a few rows down
 
 
+#: A header often carries a trailing currency-unit annotation — "Taxable Value (₹)",
+#: "Invoice Value(Rs.)" — that has nothing to do with which field it names. Stripping
+#: it turns fragile substring guessing into a reliable exact match: without this,
+#: "Taxable Value (₹)" and "Invoice Value(₹)" both fail an exact match on their own
+#: canonical alias and fall through to substring search, where whichever column comes
+#: first in the file wins — which is how "taxable_value" ended up resolving to the
+#: wrong column on a real GSTR-2B export.
+_CURRENCY_SUFFIX = re.compile(r"\(\s*(?:₹|rs\.?|inr)\s*\)\s*$")
+
+
 def _normalize_header(header: str) -> str:
-    return re.sub(r"\s+", " ", str(header).strip().lower())
+    normalized = re.sub(r"\s+", " ", str(header).strip().lower())
+    return _CURRENCY_SUFFIX.sub("", normalized).strip()
 
 
 def resolve_columns(columns: list[str]) -> dict[str, str]:
@@ -102,16 +124,46 @@ def resolve_columns(columns: list[str]) -> dict[str, str]:
     return resolved
 
 
-def _find_header_row(df: pd.DataFrame) -> int | None:
-    """Locate the real header row in a multi-row-header export (portal GSTR-2B).
+def _merge_header_pair(parent: list, child: list) -> list:
+    """Combine a spanning parent header row with its child sub-header row.
 
-    Returns its positional index, or None if row 0 already looks like the header.
+    The real GSTR-2B portal export has exactly this shape: 'Invoice Details' spans
+    'Invoice number'/'Invoice type'/'Invoice Date'/'Invoice Value', and 'Tax Amount'
+    spans 'Integrated Tax'/'Central Tax'/'State/UT Tax'/'Cess' — one row below. The
+    child label is the specific, alias-matching one, so it wins whenever present;
+    the parent label survives only for columns with no child ('GSTIN of supplier').
     """
-    for i in range(min(_MAX_HEADER_SCAN, len(df))):
-        candidate = [str(v) for v in df.iloc[i].tolist()]
-        resolved = resolve_columns(candidate)
+    merged = []
+    for idx, (p, c) in enumerate(zip(parent, child, strict=False)):
+        c_str = "" if c is None else str(c).strip()
+        if c_str.lower() == "nan":
+            c_str = ""
+        p_str = "" if p is None else str(p).strip()
+        if p_str.lower() == "nan":
+            p_str = ""
+        merged.append(c_str or p_str or f"__col_{idx}__")
+    return merged
+
+
+def _find_header_row(df: pd.DataFrame) -> tuple[int, int] | None:
+    """Locate the real header row(s) in a multi-row-header export (portal GSTR-2B).
+
+    Returns `(start_row_index, rows_consumed)` — 2 rows for a parent/child merged
+    header, otherwise 1 — or None if nothing in the scanned window looks like a
+    header.
+    """
+    limit = min(_MAX_HEADER_SCAN, len(df))
+    for i in range(limit):
+        single = [str(v) for v in df.iloc[i].tolist()]
+        resolved = resolve_columns(single)
         if all(f in resolved for f in REQUIRED_CANONICAL_FIELDS) and len(resolved) >= 3:
-            return i
+            return i, 1
+
+        if i + 1 < limit:
+            merged = _merge_header_pair(df.iloc[i].tolist(), df.iloc[i + 1].tolist())
+            resolved = resolve_columns(merged)
+            if all(f in resolved for f in REQUIRED_CANONICAL_FIELDS) and len(resolved) >= 3:
+                return i, 2
     return None
 
 
@@ -121,10 +173,17 @@ def _frame_to_rows(df: pd.DataFrame) -> tuple[list[dict], dict[str, str]]:
 
     column_map = resolve_columns(list(df.columns))
     if not all(f in column_map for f in REQUIRED_CANONICAL_FIELDS):
-        header_row = _find_header_row(df)
-        if header_row is not None:
-            df = df.rename(columns=dict(zip(df.columns, df.iloc[header_row], strict=False)))
-            df = df.iloc[header_row + 1:].reset_index(drop=True)
+        located = _find_header_row(df)
+        if located is not None:
+            header_row, span = located
+            if span == 2:
+                new_columns = _merge_header_pair(
+                    df.iloc[header_row].tolist(), df.iloc[header_row + 1].tolist()
+                )
+            else:
+                new_columns = list(df.iloc[header_row])
+            df = df.rename(columns=dict(zip(df.columns, new_columns, strict=False)))
+            df = df.iloc[header_row + span:].reset_index(drop=True)
             column_map = resolve_columns(list(df.columns))
 
     missing = [f for f in REQUIRED_CANONICAL_FIELDS if f not in column_map]
@@ -158,23 +217,61 @@ def parse_csv(content: bytes) -> tuple[list[dict], dict[str, str]]:
     return _frame_to_rows(df)
 
 
-def parse_excel(content: bytes) -> tuple[list[dict], dict[str, str]]:
+#: Keywords used to pick the right sheet out of a workbook that bundles more than
+#: one (a real Tally export commonly ships an IGST ledger, a CGST/SGST ledger and a
+#: GSTR-2B download as three sheets of one workbook — see the vendor-supplied
+#: sample). Only used to disambiguate; a single-sheet workbook never needs this.
+_SHEET_HINTS: dict[str, tuple[str, ...]] = {
+    "ledger": ("tally", "igst", "cgst", "sgst", "purchase"),
+    "gstr2b": ("gstr", "2b"),
+}
+
+
+def _pick_sheet(sheet_names: list[str], hint: str | None) -> str:
+    keywords = _SHEET_HINTS.get(hint or "", ())
+    for name in sheet_names:
+        if any(k in name.lower() for k in keywords):
+            return name
+    return sheet_names[0]
+
+
+def parse_excel(content: bytes, hint: str | None = None) -> tuple[list[dict], dict[str, str]]:
     try:
-        df = pd.read_excel(io.BytesIO(content), dtype=str, keep_default_na=False)
+        workbook = pd.ExcelFile(io.BytesIO(content))
+        sheet = _pick_sheet(workbook.sheet_names, hint)
+        df = pd.read_excel(workbook, sheet_name=sheet, dtype=str, keep_default_na=False)
     except Exception as exc:
         raise IngestionError(f"Could not parse Excel file: {exc}") from exc
     return _frame_to_rows(df)
 
 
-def parse_file(filename: str, content: bytes) -> tuple[list[dict], dict[str, str]]:
-    """Dispatch on extension. The one entry point ingestion sources should use."""
+def parse_file(
+    filename: str, content: bytes, hint: str | None = None
+) -> tuple[list[dict], dict[str, str]]:
+    """Dispatch on extension. The one entry point ingestion sources should use.
+
+    `hint` is `"ledger"` or `"gstr2b"` — which side of the reconciliation this file
+    is — used only to pick the right sheet out of a multi-sheet workbook.
+    """
     if (filename or "").lower().endswith((".xlsx", ".xls")):
-        return parse_excel(content)
+        return parse_excel(content, hint)
     return parse_csv(content)
 
 
+#: A real GSTIN is always exactly 15 characters. A longer value is a data-entry error
+#: or the wrong column mapped — never a GSTIN that happens to need truncating.
+_GSTIN_LENGTH = 15
+
+
 def normalize_gstin(gstin: str) -> str:
-    return _NON_ALNUM.sub("", str(gstin).upper())
+    """Empty (never guessed at) for anything that isn't a well-formed GSTIN.
+
+    Storing an overlong value would crash the insert (the column is VARCHAR(15));
+    silently truncating it would create a *different*, wrong-but-valid-looking GSTIN.
+    Treating it as unresolved is the only safe choice — matching falls back to name.
+    """
+    normalized = _NON_ALNUM.sub("", str(gstin).upper())
+    return normalized if len(normalized) == _GSTIN_LENGTH else ""
 
 
 def normalize_invoice_number(invoice_number: str) -> str:
@@ -267,6 +364,8 @@ class CanonicalRow:
     itc_reason: str = ""
     is_reverse_charge: bool = False
     description: str = ""
+    vendor_email: str = ""
+    vendor_phone: str = ""
     raw: dict = field(default_factory=dict, repr=False)
 
     @property
@@ -309,6 +408,8 @@ def to_canonical_rows(rows: list[dict], column_map: dict[str, str]) -> list[Cano
                 itc_reason=cell(row, "itc_reason"),
                 is_reverse_charge=parse_bool(cell(row, "reverse_charge")) or False,
                 description=cell(row, "description"),
+                vendor_email=cell(row, "vendor_email"),
+                vendor_phone=cell(row, "vendor_phone"),
                 raw=row,
             )
         )

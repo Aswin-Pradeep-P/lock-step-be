@@ -1,0 +1,104 @@
+{
+  "code": 200,
+  "transaction_id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+  "data": {
+    "status_cd": "1",
+    "data": {
+      "chksum": "e6255f8e01d58128775e20b2405bf4b93f74fc9f737b3f7da1829927f357bb61",
+      "data": {
+        "cpsumm": {
+          "b2b": [
+            { "ctin": "07AAJCA9880A1ZL", "trdnm": "AMAZON WEB SERVICES INDIA PRIVATE LIMITED", "supprd": "112024", "supfildt": "10-11-2024", "ttldocs": 3, "txval": 440805.62, "igst": 79345.02, "cgst": 0, "sgst": 0, "cess": 0 },
+            { "ctin": "06AACCG0527D1Z8", "trdnm": "GOOGLE INDIA PVT LTD", "supprd": "112024", "supfildt": "11-11-2024", "ttldocs": 2, "txval": 4342.40, "igst": 781.63, "cgst": 0, "sgst": 0, "cess": 0 },
+            { "ctin": "29AAHCD5090M1Z3", "trdnm": "DIGITAP.AI ENTERPRISE SOLUTIONS PRIVATE LIMITED", "supprd": "112024", "supfildt": "11-11-2024", "ttldocs": 1, "txval": 22662.40, "igst": 4079.23, "cgst": 0, "sgst": 0, "cess": 0 },
+            { "ctin": "24AAECJ6878N1ZU", "trdnm": "JIO PLATFORMS LIMITED", "supprd": "112024", "supfildt": "11-11-2024", "ttldocs": 1, "txval": 4801.20, "igst": 0, "cgst": 432.11, "sgst": 432.11, "cess": 0 },
+            { "ctin": "24AABCI6363G1ZP", "trdnm": "Reliance Jio Infocomm Limited", "supprd": "112024", "supfildt": "11-11-2024", "ttldocs": 1, "txval": 7201.80, "igst": 0, "cgst": 648.16, "sgst": 648.16, "cess": 0 },
+            { "ctin": "33AAACZ4322M2Z9", "trdnm": "ZOHO CORPORATION PRIVATE LIMITED", "supprd": "112024", "supfildt": "11-11-2024", "ttldocs": 1, "txval": 1600.00, "igst": 288.00, "cgst": 0, "sgst": 0, "cess": 0 },
+            { "ctin": "24AACFI9070L1Z5", "trdnm": "I TECH STORE", "supprd": "112024", "supfildt": "10-11-2024", "ttldocs": 1, "txval": 2203.39, "igst": 0, "cgst": 198.31, "sgst": 198.31, "cess": 0 },
+            { "ctin": "24AAWFG9936H1ZP", "trdnm": "GOURMESSERIE LLP", "supprd": "112024", "supfildt": "11-11-2024", "ttldocs": 1, "txval": 1694.92, "igst": 0, "cgst": 152.54, "sgst": 152.54, "cess": 0 },
+            { "ctin": "06AAGCG5872M1Z3", "trdnm": "Grey Swift Private Limited", "supprd": "112024", "supfildt": "11-11-2024", "ttldocs": 1, "txval": 150.00, "igst": 27.00, "cgst": 0, "sgst": 0, "cess": 0 },
+            { "ctin": "27AAGCG4576J1Z6", "trdnm": "Google Cloud India Private Limited", "supprd": "112024", "supfildt": "11-11-2024", "ttldocs": 1, "txval": 25.84, "igst": 4.65, "cgst": 0, "sgst": 0, "cess": 0 }
+          ]
+        },
+        "docdata": {
+          "b2b": [
+            {
+              "ctin": "07AAJCA9880A1ZL", "trdnm": "AMAZON WEB SERVICES INDIA PRIVATE LIMITED",
+              "supprd": "112024", "supfildt": "10-11-2024",
+              "inv": [
+                { "inum": "AIN2425002587878", "dt": "02-11-2024", "val": 81691.31,  "txval": 69229.92,  "igst": 12461.39, "cgst": 0, "sgst": 0, "cess": 0, "pos": "29", "rev": "N", "typ": "R", "itcavl": "Y", "rsn": "", "irn": "", "irngendate": "", "imsStatus": "N" },
+                { "inum": "AIN2425002589127", "dt": "02-11-2024", "val": 233941.82, "txval": 198255.78, "igst": 35686.04, "cgst": 0, "sgst": 0, "cess": 0, "pos": "29", "rev": "N", "typ": "R", "itcavl": "Y", "rsn": "", "irn": "", "irngendate": "", "imsStatus": "N" },
+                { "inum": "AIN2425002589265", "dt": "02-11-2024", "val": 179076.12, "txval": 151759.42, "igst": 27316.70, "cgst": 0, "sgst": 0, "cess": 0, "pos": "29", "rev": "N", "typ": "R", "itcavl": "Y", "rsn": "", "irn": "", "irngendate": "", "imsStatus": "N" }
+              ]
+            },
+            {
+              "ctin": "06AACCG0527D1Z8", "trdnm": "GOOGLE INDIA PVT LTD",
+              "supprd": "112024", "supfildt": "11-11-2024",
+              "inv": [
+                { "inum": "GINV-2024-10421", "dt": "01-11-2024", "val": 468.94,  "txval": 397.41, "igst": 71.53, "cgst": 0, "sgst": 0, "cess": 0, "pos": "29", "rev": "N", "typ": "R", "itcavl": "Y", "rsn": "", "irn": "", "irngendate": "", "imsStatus": "N" },
+                { "inum": "GINV-2024-10422", "dt": "15-11-2024", "val": 453.03,  "txval": 384.26, "igst": 68.77, "cgst": 0, "sgst": 0, "cess": 0, "pos": "29", "rev": "N", "typ": "R", "itcavl": "Y", "rsn": "", "irn": "", "irngendate": "", "imsStatus": "N" }
+              ]
+            },
+            {
+              "ctin": "29AAHCD5090M1Z3", "trdnm": "DIGITAP.AI ENTERPRISE SOLUTIONS PRIVATE LIMITED",
+              "supprd": "112024", "supfildt": "11-11-2024",
+              "inv": [
+                { "inum": "2024-25/DIG01231", "dt": "11-11-2024", "val": 26741.63, "txval": 22662.40, "igst": 4079.23, "cgst": 0, "sgst": 0, "cess": 0, "pos": "29", "rev": "N", "typ": "R", "itcavl": "Y", "rsn": "", "irn": "", "irngendate": "", "imsStatus": "N" }
+              ]
+            },
+            {
+              "ctin": "24AAECJ6878N1ZU", "trdnm": "JIO PLATFORMS LIMITED",
+              "supprd": "112024", "supfildt": "11-11-2024",
+              "inv": [
+                { "inum": "C24E242500023146", "dt": "05-11-2024", "val": 5665.42, "txval": 4801.20, "igst": 0, "cgst": 432.11, "sgst": 432.11, "cess": 0, "pos": "24", "rev": "N", "typ": "R", "itcavl": "Y", "rsn": "", "irn": "", "irngendate": "", "imsStatus": "N" }
+              ]
+            },
+            {
+              "ctin": "24AABCI6363G1ZP", "trdnm": "Reliance Jio Infocomm Limited",
+              "supprd": "112024", "supfildt": "11-11-2024",
+              "inv": [
+                { "inum": "RJI-2425-88341", "dt": "01-11-2024", "val": 8497.12, "txval": 7201.80, "igst": 0, "cgst": 648.16, "sgst": 648.16, "cess": 0, "pos": "24", "rev": "N", "typ": "R", "itcavl": "Y", "rsn": "", "irn": "", "irngendate": "", "imsStatus": "N" }
+              ]
+            },
+            {
+              "ctin": "33AAACZ4322M2Z9", "trdnm": "ZOHO CORPORATION PRIVATE LIMITED",
+              "supprd": "112024", "supfildt": "11-11-2024",
+              "inv": [
+                { "inum": "ZOHO-INV-24112", "dt": "01-11-2024", "val": 1888.00, "txval": 1600.00, "igst": 288.00, "cgst": 0, "sgst": 0, "cess": 0, "pos": "33", "rev": "N", "typ": "R", "itcavl": "Y", "rsn": "", "irn": "", "irngendate": "", "imsStatus": "N" }
+              ]
+            },
+            {
+              "ctin": "24AACFI9070L1Z5", "trdnm": "I TECH STORE",
+              "supprd": "112024", "supfildt": "10-11-2024",
+              "inv": [
+                { "inum": "IT/24-25/978", "dt": "08-11-2024", "val": 2600.00, "txval": 2203.39, "igst": 0, "cgst": 198.31, "sgst": 198.31, "cess": 0, "pos": "24", "rev": "N", "typ": "R", "itcavl": "Y", "rsn": "", "irn": "aa77ad30f54d5660be7ebbf4c64c146e150eda6b332622dafb5c72bdc9d4c3c4", "irngendate": "08-11-2024", "srctyp": "e-Invoice", "imsStatus": "N" }
+              ]
+            },
+            {
+              "ctin": "24AAWFG9936H1ZP", "trdnm": "GOURMESSERIE LLP",
+              "supprd": "112024", "supfildt": "11-11-2024",
+              "inv": [
+                { "inum": "PRN-1289", "dt": "29-11-2024", "val": 2000.00, "txval": 1694.92, "igst": 0, "cgst": 152.54, "sgst": 152.54, "cess": 0, "pos": "24", "rev": "N", "typ": "R", "itcavl": "Y", "rsn": "", "irn": "", "irngendate": "", "imsStatus": "N" }
+              ]
+            },
+            {
+              "ctin": "06AAGCG5872M1Z3", "trdnm": "Grey Swift Private Limited",
+              "supprd": "112024", "supfildt": "11-11-2024",
+              "inv": [
+                { "inum": "LE/25/1/07976", "dt": "19-11-2024", "val": 177.00, "txval": 150.00, "igst": 27.00, "cgst": 0, "sgst": 0, "cess": 0, "pos": "29", "rev": "N", "typ": "R", "itcavl": "Y", "rsn": "", "irn": "90c6352d3136cd3f296a1d80bce1b2fbc5b2a4eceef8ca187674e2dcfe4269e8", "irngendate": "19-11-2024", "srctyp": "e-Invoice", "imsStatus": "N" }
+              ]
+            },
+            {
+              "ctin": "27AAGCG4576J1Z6", "trdnm": "Google Cloud India Private Limited",
+              "supprd": "112024", "supfildt": "11-11-2024",
+              "inv": [
+                { "inum": "5129155089", "dt": "30-11-2024", "val": 30.49, "txval": 25.84, "igst": 4.65, "cgst": 0, "sgst": 0, "cess": 0, "pos": "29", "rev": "N", "typ": "R", "itcavl": "Y", "rsn": "", "irn": "", "irngendate": "", "imsStatus": "N" }
+              ]
+            }
+          ]
+        }
+      }
+    }
+  },
+  "timestamp": 1731686400000
+}

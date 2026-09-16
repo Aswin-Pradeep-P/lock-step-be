@@ -21,6 +21,8 @@ from lockstep.schemas.period import (
 )
 from lockstep.services import reconciliation
 from lockstep.services.dashboard import check_delta, period_headline
+from lockstep.services.gsp import get_gsp_client, parse_gsp_gstr2b_response
+from lockstep.services.ingestion import parse_file, to_canonical_rows
 from lockstep.services.periods import period_dates
 from lockstep.storage import get_storage
 
@@ -52,7 +54,16 @@ async def create_client(
 ):
     # ponytail: one org per deployment until real auth exists — multi-tenancy is in the
     # schema, not in the login, per the brief.
-    client = Client(org_id=uuid.UUID(int=0), legal_name=body.legal_name, gstin=body.gstin)
+    org_id = uuid.UUID(int=0)
+    existing = (
+        await db.execute(
+            select(Client).where(Client.org_id == org_id, Client.gstin == body.gstin)
+        )
+    ).scalar_one_or_none()
+    if existing:
+        return ClientOut.model_validate(existing)
+
+    client = Client(org_id=org_id, legal_name=body.legal_name, gstin=body.gstin)
     db.add(client)
     await db.commit()
     await db.refresh(client)
@@ -191,6 +202,71 @@ async def create_check(
 
     try:
         await reconciliation.run_check(db, check, period, payloads["ledger"], payloads["gstr2b"])
+    except IngestionError as exc:
+        check.status = CheckStatus.FAILED.value
+        check.error_message = str(exc)
+        await db.commit()
+        raise HTTPException(status.HTTP_400_BAD_REQUEST, str(exc)) from exc
+
+    await db.commit()
+    await db.refresh(check)
+    return CheckOut.model_validate(check)
+
+
+@router.post(
+    "/periods/{period_id}/checks/gsp-fetch",
+    response_model=CheckOut, status_code=status.HTTP_201_CREATED,
+)
+async def create_check_from_gsp(
+    period_id: uuid.UUID,
+    ledger_file: UploadFile | None = File(None),
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """Same as `create_check`, but the GSTR-2B side is fetched live from a GSP by
+    the client's own GSTIN instead of uploaded — "Fetch from GST Portal" in the UI.
+    Matching is identical either way; only where the 2B rows came from differs.
+    """
+    period = await _require_period(db, period_id)
+    client = await db.get(Client, period.client_id)
+    if client is None:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "Client not found")
+
+    storage = get_storage()
+    check = ReconciliationCheck(id=uuid.uuid4(), period_id=period.id, created_by=current_user.id)
+
+    ledger_row_bytes: tuple[str, bytes] | None = None
+    if ledger_file is not None:
+        filename = ledger_file.filename or ""
+        if not filename.lower().endswith(ACCEPTED_EXTENSIONS):
+            raise HTTPException(
+                status.HTTP_400_BAD_REQUEST,
+                f"{filename} must be one of {', '.join(ACCEPTED_EXTENSIONS)}",
+            )
+        content = await ledger_file.read()
+        url = storage.save(f"{check.id}/ledger_{os.path.basename(filename)}", content)
+        check.ledger_file_url = url
+        ledger_row_bytes = (filename, content)
+
+    db.add(check)
+    await db.flush()
+
+    try:
+        ledger_rows: list = []
+        column_mapping: dict = {}
+        if ledger_row_bytes:
+            rows, mapping = parse_file(*ledger_row_bytes, hint="ledger")
+            ledger_rows = to_canonical_rows(rows, mapping)
+            column_mapping["ledger"] = mapping
+
+        gsp_client = get_gsp_client()
+        gsp_response = await gsp_client.fetch_gstr2b(client.gstin, period.tax_period)
+        gstr2b_rows = parse_gsp_gstr2b_response(gsp_response)
+        column_mapping["gstr2b"] = {"source": "gsp_api"}
+
+        await reconciliation.run_check_from_rows(
+            db, check, period, ledger_rows, gstr2b_rows, column_mapping
+        )
     except IngestionError as exc:
         check.status = CheckStatus.FAILED.value
         check.error_message = str(exc)

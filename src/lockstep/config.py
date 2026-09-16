@@ -7,11 +7,22 @@ class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")
 
     database_url: str = "postgresql+asyncpg://lockstep:lockstep@localhost:5432/lockstep"
-    redis_url: str = "redis://localhost:6379/0"
 
     anthropic_api_key: str = ""
     anthropic_model: str = "claude-opus-5"
-    ai_concurrency: int = 5
+
+    # Fallback narration provider when there's no Anthropic key (or it's invalid) —
+    # same role, same prompt, same "facts in, plain English out" contract. Never
+    # used for matching; that stays rule-only regardless of which provider narrates.
+    groq_api_key: str = ""
+    # A reasoning model — see the `reasoning_effort` call in ai_summaries.py, which
+    # is specific to this family of Groq-hosted models and keeps reasoning-token
+    # overhead low enough that a short summary fits in max_tokens.
+    groq_model: str = "openai/gpt-oss-120b"
+
+    # "stub" returns a fixed real sandbox sample regardless of GSTIN/period — there's
+    # no live GSP subscription configured yet. See services/gsp.py.
+    gsp_provider: str = "stub"
 
     jwt_secret: str = "change-me"
     jwt_algorithm: str = "HS256"

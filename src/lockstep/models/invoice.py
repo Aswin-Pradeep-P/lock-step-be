@@ -104,10 +104,15 @@ class Invoice(Base):
         server_default=InvoiceMatchStatus.PENDING.value, nullable=False,
     )
     # A human sentence, not a code. Deterministic — a CA must be able to audit it.
-    match_reason: Mapped[str | None] = mapped_column(String(255))
+    # 500, not 255: a Sec 17(5) category hint (see risk_rules.sec17_5_hint) appends a
+    # full second sentence onto the base reason for a MISSING_IN_GSTR2B invoice.
+    match_reason: Mapped[str | None] = mapped_column(String(500))
     carried_from_period: Mapped[str | None] = mapped_column(CHAR(6))
     # Sec 16(4) backstop. Secondary information, not the headline, and not the LLM's call.
     recoverable_until: Mapped[date | None] = mapped_column(Date)
+    # The ledger/2B narration, if the file carried one — the only thing that lets a
+    # Sec 17(5) category hint (see risk_rules.sec17_5_hint) survive past match time.
+    description: Mapped[str | None] = mapped_column(String(500))
 
     raw_data: Mapped[dict] = mapped_column(JSONB, nullable=False)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
