@@ -22,6 +22,17 @@ class Settings(BaseSettings):
 
     api_v1_prefix: str = "/api/v1"
 
+    # Vendor risk bands, from on_time_rate. A judge will ask to change these live,
+    # so they are config, not constants in the scoring code.
+    risk_on_time_rate_low: float = 0.9      # >= this -> LOW
+    risk_on_time_rate_medium: float = 0.6   # >= this -> MEDIUM, below -> HIGH
+    risk_history_window: int = 6            # periods used for avg_days_past_cutoff
+
+    # Action thresholds, in rupees of tax at risk.
+    # Auto-notify always; propose a hold above X; require human approval above Y.
+    action_hold_proposal_threshold: float = 50_000.0
+    action_approval_threshold: float = 200_000.0
+
 
 @lru_cache
 def get_settings() -> Settings:

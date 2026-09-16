@@ -1,53 +1,56 @@
 # lock-step-be
 
-Lockstep backend: GST ITC reconciliation. Upload a purchase-ledger CSV and a GSTR-2B CSV,
-get every invoice matched (exact / clerical typo / missing) and risk-classified (safe /
-low risk / high risk / cannot be claimed) with an AI-written explanation, statutory
-citations, and — where still recoverable — the Sec 16(4) deadline.
+Backend for the GST ITC early-warning system. Read `CLAUDE.md` first — it holds the
+product thesis, the GST domain rules, the schema and the matching tiers.
 
-See `/home/rahul/.claude/plans/splendid-brewing-bachman.md` for the full architecture writeup.
+**The short version:** GSTR-2B is generated on the 14th from supplier filings made by
+the 13th, so every tool built on 2B reports a missing invoice after the deadline that
+decided the outcome. This one works in the 1st-to-13th window, while the vendor can
+still act.
 
 ## Stack
 
-FastAPI (async) + SQLAlchemy 2.0 (async) + Postgres, Celery + Redis for the reconciliation
-pipeline, Anthropic Claude for per-invoice risk classification, `uv` for dependency management.
+FastAPI (async) + SQLAlchemy 2.0 (async) + Postgres, `uv` for dependencies, Anthropic
+Claude for per-vendor summaries only. Matching is deterministic — no LLM in that path.
 
-## Setup
+## Run it
 
-```bash
-uv sync --group dev
-cp .env.example .env   # fill in ANTHROPIC_API_KEY for real AI summaries
-docker compose up -d   # postgres (5432) + redis (6380 — 6379 was already taken locally)
-uv run alembic upgrade head
+```powershell
+.\start.ps1           # containers, deps, migrations, demo data, API on :8010
+.\start.ps1 -Reset    # same, but rebuild the demo data first
 ```
 
-## Running
+That is the only command. It is idempotent, so it is also the reboot command.
+API docs: http://localhost:8010/docs · login `demo@lockstep.test` / `lockstep`.
+
+The frontend lives in `../lock-step-fe` (`npm run dev`, proxies `/api` to :8010).
+
+## Tests
 
 ```bash
-# Terminal 1
-uv run uvicorn lockstep.main:app --reload --port 8010
-
-# Terminal 2
-uv run celery -A lockstep.celery_app worker --loglevel=info -P solo
-```
-
-API docs: http://localhost:8010/docs
-
-## Testing
-
-```bash
-uv run pytest
+uv run pytest          # 82 tests; every matching rule has a named fixture
 uv run ruff check .
 ```
 
+## Demo data
+
+`uv run python -m lockstep.seed --reset` builds 20 vendors, 6 periods of filing
+history and ~900 invoices across all ten statuses, deterministically.
+
+**This data is seeded, not real — say so in the demo.** The prediction feature needs
+filing history that a day-one deployment would not have, and being straight about that
+is cheaper than being asked.
+
 ## Notes
 
-- **`ANTHROPIC_MODEL`** defaults to `claude-opus-5`. This call runs once per non-exact-match
-  invoice, so at high monthly invoice volumes, switching to `claude-sonnet-5` (2.5x cheaper)
-  may be worth it — it's a one-line env change, not a code change.
+- **`ANTHROPIC_API_KEY`** is optional. Without it, vendor summaries fall back to a
+  deterministic sentence built from the same facts — nothing else changes, because
+  statuses, amounts and risk bands are all rules.
+- **`ANTHROPIC_MODEL`** defaults to `claude-opus-5`. One call per *affected vendor*
+  (~20), not per invoice (~500), so cost is not the constraint it would otherwise be.
 - **Storage** is local disk (`./data/uploads`) behind an S3-shaped interface
-  (`lockstep.storage.StorageBackend`). Swapping to real S3 later means writing one new
-  class with the same `save`/`read` signatures.
-- Without a valid `ANTHROPIC_API_KEY`, invoices still get matched and bucketed correctly —
-  the AI classifier falls back to a deterministic risk tier and a placeholder summary
-  instead of failing the run.
+  (`lockstep.storage.StorageBackend`).
+- **Ingestion** takes CSV and Excel behind `parse_file`, so a GSTN API source can
+  produce the same `CanonicalRow` list later without touching anything downstream.
+- A check runs inline (no queue): it is seconds of work, and a synchronous result lets
+  the UI show the new delta immediately.
