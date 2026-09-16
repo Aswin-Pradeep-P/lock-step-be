@@ -1,44 +1,100 @@
 import uuid
-from datetime import date
+from datetime import date, datetime
+from decimal import Decimal
 
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 
-ACTION_BY_RISK_TIER: dict[str, str] = {
-    "PENDING": "Processing",
-    "SAFE": "No action needed",
-    "LOW_RISK": "Ask vendor to correct and refile",
-    "HIGH_RISK": "Send reminder to vendor before the deadline",
-    "BLOCKED": "Write off — not claimable",
-}
+from lockstep.models.invoice import Invoice
+
+
+class InvoiceSideOut(BaseModel):
+    """One side of a mismatch, for the side-by-side diff."""
+
+    invoice_number: str
+    invoice_date: date | None
+    taxable_value: Decimal | None
+    igst: Decimal
+    cgst: Decimal
+    sgst: Decimal
+    cess: Decimal
+    total_tax: Decimal
+    raw_data: dict
 
 
 class InvoiceOut(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
     id: uuid.UUID
-    invoice_number: str
-    status: str
-    risk_tier: str
-    action: str
-    ai_summary: str | None
-    citations: list[str] | None
-    recoverable_until: date | None
-    itc_amount: float | None
+    period_id: uuid.UUID
+    check_id: uuid.UUID
+    vendor_id: uuid.UUID | None
+    vendor_gstin: str | None
     vendor_name: str | None
-    raw_data: dict
+    source: str
+    status: str
+    match_reason: str | None
+    carried_from_period: str | None
+
+    invoice_number: str
+    invoice_date: date | None
+    taxable_value: Decimal | None
+    igst: Decimal
+    cgst: Decimal
+    sgst: Decimal
+    cess: Decimal
+    total_tax: Decimal
+
+    itc_available: bool | None
+    itc_reason: str | None
+    is_reverse_charge: bool
+    supplier_filed_at: date | None
+    recoverable_until: date | None
+
+    counterpart: InvoiceSideOut | None = None
+    created_at: datetime
 
     @classmethod
-    def build(cls, invoice, vendor_name: str | None) -> "InvoiceOut":
-        status_value = str(invoice.status)
-        risk_tier_value = str(invoice.risk_tier)
+    def build(
+        cls, invoice: Invoice, vendor_name: str | None = None, counterpart: Invoice | None = None
+    ) -> "InvoiceOut":
         return cls(
             id=invoice.id,
-            invoice_number=invoice.invoice_number,
-            status=status_value,
-            risk_tier=risk_tier_value,
-            action=ACTION_BY_RISK_TIER.get(risk_tier_value, "Review"),
-            ai_summary=invoice.ai_summary,
-            citations=invoice.citations,
-            recoverable_until=invoice.recoverable_until,
-            itc_amount=float(invoice.itc_amount) if invoice.itc_amount is not None else None,
+            period_id=invoice.period_id,
+            check_id=invoice.check_id,
+            vendor_id=invoice.vendor_id,
+            vendor_gstin=invoice.vendor_gstin,
             vendor_name=vendor_name,
-            raw_data=invoice.raw_data,
+            source=str(invoice.source),
+            status=str(invoice.status),
+            match_reason=invoice.match_reason,
+            carried_from_period=invoice.carried_from_period,
+            invoice_number=invoice.invoice_number,
+            invoice_date=invoice.invoice_date,
+            taxable_value=invoice.taxable_value,
+            igst=invoice.igst,
+            cgst=invoice.cgst,
+            sgst=invoice.sgst,
+            cess=invoice.cess,
+            total_tax=invoice.total_tax,
+            itc_available=invoice.itc_available,
+            itc_reason=invoice.itc_reason,
+            is_reverse_charge=invoice.is_reverse_charge,
+            supplier_filed_at=invoice.supplier_filed_at,
+            recoverable_until=invoice.recoverable_until,
+            counterpart=(
+                InvoiceSideOut(
+                    invoice_number=counterpart.invoice_number,
+                    invoice_date=counterpart.invoice_date,
+                    taxable_value=counterpart.taxable_value,
+                    igst=counterpart.igst,
+                    cgst=counterpart.cgst,
+                    sgst=counterpart.sgst,
+                    cess=counterpart.cess,
+                    total_tax=counterpart.total_tax,
+                    raw_data=counterpart.raw_data,
+                )
+                if counterpart
+                else None
+            ),
+            created_at=invoice.created_at,
         )

@@ -25,3 +25,7 @@ class Vendor(Base):
     )
 
     invoices = relationship("Invoice", back_populates="vendor")
+    filing_history = relationship(
+        "VendorFilingHistory", back_populates="vendor", cascade="all, delete-orphan",
+        passive_deletes=True,
+    )
