@@ -72,3 +72,5 @@ class HeadlineOut(BaseModel):
     vendors_not_filed: int
     checks_run: int
     status_counts: dict[str, int]
+    invoices_corrected: int
+    tax_credit_saved: Decimal

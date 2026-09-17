@@ -125,12 +125,16 @@ async def create_period(
 @router.get("/periods/{period_id}/headline", response_model=HeadlineOut)
 async def get_headline(
     period_id: uuid.UUID,
+    check_id: uuid.UUID | None = Query(None),
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
-    """₹X at risk · N days to the 13th · M vendors haven't filed."""
+    """₹X at risk · N days to the 13th · M vendors haven't filed.
+
+    Optional `check_id` pins every tile to the same check (defaults to latest).
+    """
     period = await _require_period(db, period_id)
-    return HeadlineOut(**vars(await period_headline(db, period)))
+    return HeadlineOut(**vars(await period_headline(db, period, check_id=check_id)))
 
 
 @router.get("/periods/{period_id}/delta")
