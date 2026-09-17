@@ -54,6 +54,8 @@ class ReconciliationPeriod(Base):
     cutoff_date: Mapped[date] = mapped_column(Date, nullable=False)  # the 13th
     gstr2b_date: Mapped[date] = mapped_column(Date, nullable=False)  # the 14th
     filing_due: Mapped[date] = mapped_column(Date, nullable=False)  # the 20th
+    from_date: Mapped[date | None] = mapped_column(Date, nullable=True)  # upload date range start
+    to_date: Mapped[date | None] = mapped_column(Date, nullable=True)  # upload date range end
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
 
     client = relationship("Client", back_populates="periods")

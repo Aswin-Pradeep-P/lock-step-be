@@ -112,6 +112,8 @@ async def create_period(
         cutoff_date=dates["cutoff_date"],
         gstr2b_date=dates["gstr2b_date"],
         filing_due=dates["filing_due"],
+        from_date=body.from_date,
+        to_date=body.to_date,
     )
     db.add(period)
     await db.commit()

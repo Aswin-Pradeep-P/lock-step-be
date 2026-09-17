@@ -23,6 +23,8 @@ class ClientCreate(BaseModel):
 class PeriodCreate(BaseModel):
     client_id: uuid.UUID
     tax_period: str  # MMYYYY
+    from_date: date | None = None
+    to_date: date | None = None
 
     @field_validator("tax_period")
     @classmethod
@@ -40,6 +42,8 @@ class PeriodOut(BaseModel):
     cutoff_date: date
     gstr2b_date: date
     filing_due: date
+    from_date: date | None = None
+    to_date: date | None = None
     created_at: datetime
 
 
