@@ -19,7 +19,6 @@ from __future__ import annotations
 from typing import Protocol
 
 from lockstep.core.exceptions import IngestionError, ValidationError
-from lockstep.services.mock_gstr2b import Gstr2bVariant, get_gstr2b_payload
 from lockstep.services.ingestion import (
     CanonicalRow,
     clerical_key,
@@ -30,6 +29,7 @@ from lockstep.services.ingestion import (
     parse_bool,
     parse_date,
 )
+from lockstep.services.mock_gstr2b import Gstr2bVariant, get_gstr2b_payload
 
 
 def _dig(payload: dict, *keys: str) -> dict:

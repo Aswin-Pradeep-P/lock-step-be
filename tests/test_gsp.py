@@ -17,9 +17,16 @@ FIXTURE = json.loads(
 
 def test_parses_every_invoice_across_every_vendor():
     rows = parse_gsp_gstr2b_response(FIXTURE)
-    # 3 + 2 + 1*8 = 13 invoices across 10 vendors in the sample.
-    assert len(rows) == 13
-    assert len({r.gstin_normalized for r in rows}) == 10
+    # The `inconsistent` fetch: 80 register invoices less the 14 whose suppliers
+    # had not filed yet. Regenerate with scripts/generate_demo_dataset.py.
+    assert len(rows) == 66
+    # 35 vendors in the register, but three (industrial gases, freight, copper) have
+    # not filed at all, so they are absent from this fetch entirely. A wholly absent
+    # vendor is what the "N vendors haven't filed" headline counts.
+    assert len({r.gstin_normalized for r in rows}) == 32
+    # cpsumm must agree with the detail it summarises, or the raw JSON reads broken.
+    summary = FIXTURE["data"]["data"]["data"]["cpsumm"]["b2b"]
+    assert sum(v["ttldocs"] for v in summary) == len(rows)
 
 
 def test_amazon_invoice_fields_map_correctly():
@@ -31,8 +38,9 @@ def test_amazon_invoice_fields_map_correctly():
     assert aws.taxable_value == Decimal("69229.92")
     assert aws.igst == Decimal("12461.39")
     assert aws.cgst == Decimal("0.00")
-    assert aws.invoice_date.isoformat() == "2024-11-02"
-    assert aws.supplier_filed_at.isoformat() == "2024-11-10"
+    assert aws.invoice_date.isoformat() == "2026-09-02"
+    # Cutoff for period 092026 is 13-10-2026; AWS files comfortably before it.
+    assert aws.supplier_filed_at.isoformat() == "2026-10-10"
     assert aws.itc_available is True
     assert aws.is_reverse_charge is False
 
@@ -54,7 +62,7 @@ def test_raw_data_preserves_ims_status_and_irn():
     itech = next(r for r in rows if r.invoice_number == "IT/24-25/978")
 
     assert itech.raw["inv"]["imsStatus"] == "N"
-    assert itech.raw["inv"]["irn"].startswith("aa77ad30")
+    assert len(itech.raw["inv"]["irn"]) == 64  # deterministic, regenerated with the fixture
 
 
 def test_clerical_key_and_normalization_are_reused_from_ingestion():

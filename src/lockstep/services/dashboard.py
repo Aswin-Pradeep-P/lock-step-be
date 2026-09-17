@@ -11,7 +11,7 @@ from decimal import Decimal
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from lockstep.models.enums import AT_RISK_STATUSES, InvoiceMatchStatus
+from lockstep.models.enums import AT_RISK_STATUSES, InvoiceMatchStatus, InvoiceSource
 from lockstep.models.invoice import Invoice
 from lockstep.models.period import ReconciliationCheck, ReconciliationPeriod
 from lockstep.services.periods import days_to_cutoff
@@ -52,7 +52,19 @@ async def status_counts(db: AsyncSession, period_id, check_id=None) -> dict[str,
     rows = (
         await db.execute(
             select(Invoice.status, func.count())
-            .where(Invoice.period_id == period_id, Invoice.check_id == check_id)
+            .where(
+                Invoice.period_id == period_id,
+                Invoice.check_id == check_id,
+                # A matched pair is stored as two rows pointing at each other (the
+                # ledger side and the 2B side), so counting both double-counts every
+                # match: 50 exact matches read as 100. Count the ledger side, and the
+                # 2B-only rows that have no ledger counterpart. `period_headline`'s
+                # exposure query already guards this the same way.
+                ~(
+                    (Invoice.source == InvoiceSource.GSTR2B.value)
+                    & Invoice.matched_invoice_id.isnot(None)
+                ),
+            )
             .group_by(Invoice.status)
         )
     ).all()
