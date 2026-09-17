@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from lockstep.api.v1 import actions, auth, invoices, periods, vendors
+from lockstep.api.v1 import actions, auth, gstr2b, invoices, periods, vendors
 from lockstep.config import get_settings
 from lockstep.errors import register_exception_handlers
 
@@ -21,6 +21,7 @@ def create_app() -> FastAPI:
     register_exception_handlers(app)
 
     app.include_router(auth.router, prefix=settings.api_v1_prefix)
+    app.include_router(gstr2b.router, prefix=settings.api_v1_prefix)
     app.include_router(periods.router, prefix=settings.api_v1_prefix)
     app.include_router(invoices.router, prefix=settings.api_v1_prefix)
     app.include_router(vendors.router, prefix=settings.api_v1_prefix)

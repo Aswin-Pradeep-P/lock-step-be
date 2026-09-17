@@ -1,7 +1,9 @@
 import os
 import uuid
 
-from fastapi import APIRouter, Depends, File, HTTPException, UploadFile, status
+from typing import Literal
+
+from fastapi import APIRouter, Depends, File, HTTPException, Query, UploadFile, status
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -222,6 +224,7 @@ async def create_check(
 async def create_check_from_gsp(
     period_id: uuid.UUID,
     ledger_file: UploadFile | None = File(None),
+    variant: Literal["inconsistent", "corrected"] = Query("corrected"),
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
@@ -262,7 +265,9 @@ async def create_check_from_gsp(
             column_mapping["ledger"] = mapping
 
         gsp_client = get_gsp_client()
-        gsp_response = await gsp_client.fetch_gstr2b(client.gstin, period.tax_period)
+        gsp_response = await gsp_client.fetch_gstr2b(
+            client.gstin, period.tax_period, variant=variant
+        )
         gstr2b_rows = parse_gsp_gstr2b_response(gsp_response)
         column_mapping["gstr2b"] = {"source": "gsp_api"}
 
