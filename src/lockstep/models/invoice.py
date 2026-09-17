@@ -11,6 +11,7 @@ from sqlalchemy import (
     Index,
     Numeric,
     String,
+    Text,
     func,
     text,
 )
@@ -113,6 +114,13 @@ class Invoice(Base):
     # The ledger/2B narration, if the file carried one — the only thing that lets a
     # Sec 17(5) category hint (see risk_rules.sec17_5_hint) survive past match time.
     description: Mapped[str | None] = mapped_column(String(500))
+
+    # Generated lazily (see services/invoice_insight.py) the first time this
+    # invoice's detail is opened, then cached here — never written during a bulk
+    # check. Markdown; a second, clearly AI-authored layer over `match_reason`,
+    # never a replacement for it.
+    ai_reason_md: Mapped[str | None] = mapped_column(Text)
+    ai_suggestion_md: Mapped[str | None] = mapped_column(Text)
 
     raw_data: Mapped[dict] = mapped_column(JSONB, nullable=False)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())

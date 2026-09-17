@@ -16,9 +16,10 @@ from decimal import Decimal
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from lockstep.config import Settings, get_settings
+from lockstep.config import get_settings
 from lockstep.models.enums import AT_RISK_STATUSES
 from lockstep.models.invoice import Invoice
+from lockstep.services import llm
 from lockstep.services.periods import days_to_cutoff
 from lockstep.services.vendor_scoring import VendorRiskRow
 
@@ -101,72 +102,15 @@ def fallback_summary(vendor: VendorRiskRow, tax_period: str | None) -> str:
     return " ".join(parts)
 
 
-async def _call_anthropic(settings: Settings, user_content: str) -> str | None:
-    if not settings.anthropic_api_key:
-        return None
-    try:
-        from anthropic import AsyncAnthropic
-
-        client = AsyncAnthropic(api_key=settings.anthropic_api_key)
-        response = await client.messages.create(
-            model=settings.anthropic_model,
-            max_tokens=250,
-            system=_SYSTEM,
-            messages=[{"role": "user", "content": user_content}],
-        )
-        text = "".join(block.text for block in response.content if block.type == "text").strip()
-        return text or None
-    except Exception:
-        return None
-
-
-async def _call_groq(settings: Settings, user_content: str) -> str | None:
-    """Same prompt, same contract, an OpenAI-compatible chat-completions call — used
-    only when there's no working Anthropic key. Matching stays rule-only regardless
-    of which provider narrates; this never sees or changes a status."""
-    if not settings.groq_api_key:
-        return None
-    try:
-        import httpx
-
-        async with httpx.AsyncClient(timeout=15) as client:
-            response = await client.post(
-                "https://api.groq.com/openai/v1/chat/completions",
-                headers={"Authorization": f"Bearer {settings.groq_api_key}"},
-                json={
-                    "model": settings.groq_model,
-                    "max_tokens": 250,
-                    # The default model is a reasoning model — without this, its own
-                    # reasoning tokens can eat the entire max_tokens budget before
-                    # any visible text comes out (confirmed: ~260 reasoning tokens
-                    # at default effort vs ~25 at "low", for a task this short).
-                    "reasoning_effort": "low",
-                    "messages": [
-                        {"role": "system", "content": _SYSTEM},
-                        {"role": "user", "content": user_content},
-                    ],
-                },
-            )
-            response.raise_for_status()
-            text = response.json()["choices"][0]["message"]["content"].strip()
-            return text or None
-    except Exception:
-        return None
-
-
 async def vendor_summary(
     db: AsyncSession, vendor: VendorRiskRow, tax_period: str | None
 ) -> str:
     settings = get_settings()
     user_content = "\n".join(_facts(vendor, tax_period))
 
-    for provider in (_call_anthropic, _call_groq):
-        text = await provider(settings, user_content)
-        if text:
-            return text
-
+    text = await llm.complete(settings, _SYSTEM, user_content, max_tokens=250)
     # A summary is never worth failing a reconciliation over.
-    return fallback_summary(vendor, tax_period)
+    return text or fallback_summary(vendor, tax_period)
 
 
 async def draft_vendor_email(

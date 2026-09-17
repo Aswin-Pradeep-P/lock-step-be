@@ -13,17 +13,20 @@ from lockstep.models.invoice import Invoice
 from lockstep.models.invoice_action import InvoiceAction
 from lockstep.models.period import ReconciliationPeriod
 from lockstep.models.user import User
+from lockstep.models.vendor import Vendor
 from lockstep.schemas.action import (
     ActionCreate,
     ActionOut,
     ActionProposalOut,
     BulkNudgeOut,
     BulkNudgeRequest,
+    InvoiceInsightOut,
     ThresholdsOut,
 )
 from lockstep.services import actions as action_service
 from lockstep.services.ai_summaries import draft_vendor_email
 from lockstep.services.dashboard import latest_check_id
+from lockstep.services.invoice_insight import generate_insight
 from lockstep.services.vendor_scoring import get_vendor_risk
 
 router = APIRouter(tags=["actions"])
@@ -75,6 +78,33 @@ async def propose_action(
         requires_approval=proposal.requires_approval,
         rationale=proposal.rationale,
     )
+
+
+@router.get("/invoices/{invoice_id}/insight", response_model=InvoiceInsightOut)
+async def invoice_insight(
+    invoice_id: uuid.UUID,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """AI-authored reason + suggested next step, generated once and cached on the
+    row. A second, clearly-labelled layer over `match_reason` — never a
+    replacement for it; the deterministic reason is unaffected either way."""
+    invoice = await _require_invoice(db, invoice_id)
+    if invoice.ai_reason_md and invoice.ai_suggestion_md:
+        return InvoiceInsightOut(
+            reason_md=invoice.ai_reason_md, suggestion_md=invoice.ai_suggestion_md
+        )
+
+    vendor_name = None
+    if invoice.vendor_id:
+        vendor = await db.get(Vendor, invoice.vendor_id)
+        vendor_name = vendor.name if vendor else None
+
+    insight = await generate_insight(invoice, vendor_name)
+    invoice.ai_reason_md = insight.reason_md
+    invoice.ai_suggestion_md = insight.suggestion_md
+    await db.commit()
+    return InvoiceInsightOut(reason_md=insight.reason_md, suggestion_md=insight.suggestion_md)
 
 
 @router.get("/invoices/{invoice_id}/actions", response_model=list[ActionOut])

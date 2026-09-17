@@ -51,6 +51,11 @@ class InvoiceOut(BaseModel):
     supplier_filed_at: date | None
     description: str | None
 
+    # Populated lazily, on first `GET /invoices/{id}/insight` — included here so a
+    # page that reloads an already-reviewed invoice doesn't have to re-fetch it.
+    ai_reason_md: str | None
+    ai_suggestion_md: str | None
+
     # Sec 16(4): the date is stored on every invoice, but until now nothing ever
     # compared it to today — computed here, at read time, so it can't go stale the
     # way persisting a boolean at match time would.
@@ -90,6 +95,8 @@ class InvoiceOut(BaseModel):
             is_reverse_charge=invoice.is_reverse_charge,
             supplier_filed_at=invoice.supplier_filed_at,
             description=invoice.description,
+            ai_reason_md=invoice.ai_reason_md,
+            ai_suggestion_md=invoice.ai_suggestion_md,
             recoverable_until=deadline,
             days_to_recover=days_remaining(deadline) if deadline else None,
             window_open=is_window_open(deadline) if deadline else None,

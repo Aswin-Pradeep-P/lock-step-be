@@ -53,3 +53,6 @@ class BulkNudgeOut(BaseModel):
     nudged_vendors: int
     nudged_invoices: int
     action_ids: list[uuid.UUID]
+class InvoiceInsightOut(BaseModel):
+    reason_md: str
+    suggestion_md: str
