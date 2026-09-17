@@ -1,9 +1,8 @@
-import json
-from pathlib import Path
-
 from lockstep.services.gsp import parse_gsp_gstr2b_response
 from lockstep.services.mock_gstr2b import (
     CLERICAL_INVOICES,
+    CORRECTED_ITC_BLOCKED,
+    CORRECTED_TAX_SCALE,
     ITC_BLOCKED,
     OMITTED_INVOICES,
     get_gstr2b_mock,
@@ -15,13 +14,25 @@ from lockstep.core.exceptions import ValidationError
 import pytest
 
 
-def test_corrected_payload_is_the_sample_fixture():
-    """Existing GSP fetch with no variant must keep returning the original sample."""
-    fixture = json.loads(
-        (Path(__file__).parent / "fixtures" / "gsp_gstr2b_sample.json").read_text()
-    )
-    assert get_gstr2b_payload("corrected") == fixture
-    assert get_gstr2b_payload() == fixture
+def test_corrected_payload_has_mild_defects():
+    """Corrected variant keeps all 13 invoices but applies mild mutations."""
+    payload = get_gstr2b_payload("corrected")
+    rows = parse_gsp_gstr2b_response(payload)
+    assert len(rows) == 13
+
+    # One invoice has a +1% tax bump
+    scaled = next(r for r in rows if r.invoice_number == "AIN2425002589127")
+    # original igst was 35686.04; 1% up is 36042.90
+    assert str(scaled.igst) == "36042.90"
+
+    # One invoice has ITC blocked
+    blocked = [r for r in rows if r.invoice_number in CORRECTED_ITC_BLOCKED]
+    assert len(blocked) == len(CORRECTED_ITC_BLOCKED)
+    assert all(r.itc_available is False for r in blocked)
+
+    # No invoice numbers are changed or omitted
+    numbers = {r.invoice_number for r in rows}
+    assert not OMITTED_INVOICES.isdisjoint(numbers)  # omitted invoices still present
 
 
 def test_inconsistent_omits_unfiled_invoices_and_seeds_defects():
@@ -50,7 +61,11 @@ def test_mock_envelope_reports_counts():
     assert inconsistent["count"] == 11
     assert inconsistent["defects"]["missing_in_2b"] == 2
     assert corrected["count"] == 13
-    assert corrected["defects"]["exact"] == 13
+    assert corrected["defects"]["exact"] == 11
+    assert corrected["defects"]["amount_mismatch"] == 1
+    assert corrected["defects"]["itc_ineligible"] == 1
+    assert corrected["defects"]["missing_in_2b"] == 0
+    assert corrected["defects"]["clerical"] == 0
 
 
 def test_parse_variant_rejects_unknown():

@@ -41,3 +41,15 @@ class ActionProposalOut(BaseModel):
     proposed_action: str
     requires_approval: bool
     rationale: str
+
+
+class BulkNudgeRequest(BaseModel):
+    vendor_ids: list[uuid.UUID]
+    check_id: uuid.UUID | None = None
+    channel: str | None = "email"
+
+
+class BulkNudgeOut(BaseModel):
+    nudged_vendors: int
+    nudged_invoices: int
+    action_ids: list[uuid.UUID]

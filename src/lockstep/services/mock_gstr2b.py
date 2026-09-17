@@ -1,8 +1,10 @@
 """Demo GSTR-2B payloads in GSTN/GSP envelope shape.
 
-`corrected` is the sandbox sample as-filed. `inconsistent` is the same sample
-with seeded defects so matching has something to show (missing invoices, typos,
-tax diffs, ITC blocked). Both go through `parse_gsp_gstr2b_response` unchanged.
+`corrected` is the sandbox sample with mild residual defects (1 small tax
+mismatch, 1 ITC block) — realistic for a re-run scenario. `inconsistent` is the
+same sample with heavier defects (missing invoices, typos, tax diffs, ITC
+blocked) for the initial reconciliation. Both go through
+`parse_gsp_gstr2b_response` unchanged.
 """
 
 from __future__ import annotations
@@ -28,6 +30,12 @@ CLERICAL_INVOICES = {
 TAX_SCALE = {"AIN2425002587878": 1.03}
 ITC_BLOCKED = {
     "RJI-2425-88341": "POS and supplier state are same but recipient state is different",
+    "C24E242500023146": "ITC restricted under section 17(5)",
+}
+
+# --- Corrected variant: lighter defects for the re-run demo ---
+CORRECTED_TAX_SCALE = {"AIN2425002589127": 1.01}  # +1% on one AWS invoice
+CORRECTED_ITC_BLOCKED = {
     "C24E242500023146": "ITC restricted under section 17(5)",
 }
 
@@ -90,15 +98,43 @@ def _apply_inconsistent(payload: dict) -> dict:
     return mutated
 
 
+def _apply_corrected(payload: dict) -> dict:
+    """Lighter mutations than inconsistent: no omissions, no typos — just a small
+    tax bump on one invoice and one ITC block. Simulates 'mostly fixed' data."""
+    mutated = copy.deepcopy(payload)
+    for vendor in _b2b_vendors(mutated):
+        for inv in vendor.get("inv", []):
+            inum = str(inv.get("inum", ""))
+            scale = CORRECTED_TAX_SCALE.get(inum)
+            if scale is not None:
+                inv["igst"] = _round_money(float(inv.get("igst") or 0) * scale)
+                inv["cgst"] = _round_money(float(inv.get("cgst") or 0) * scale)
+                inv["sgst"] = _round_money(float(inv.get("sgst") or 0) * scale)
+                cess = float(inv.get("cess") or 0)
+                inv["val"] = _round_money(
+                    float(inv.get("txval") or 0)
+                    + float(inv["igst"])
+                    + float(inv["cgst"])
+                    + float(inv["sgst"])
+                    + cess
+                )
+            if inum in CORRECTED_ITC_BLOCKED:
+                inv["itcavl"] = "N"
+                inv["rsn"] = CORRECTED_ITC_BLOCKED[inum]
+    return mutated
+
+
 def defects_for(variant: Gstr2bVariant) -> dict[str, int]:
     sample_count = _invoice_count(_load_sample())
     if variant == "corrected":
         return {
-            "exact": sample_count,
+            "exact": sample_count
+            - len(CORRECTED_TAX_SCALE)
+            - len(CORRECTED_ITC_BLOCKED),
             "clerical": 0,
-            "amount_mismatch": 0,
+            "amount_mismatch": len(CORRECTED_TAX_SCALE),
             "missing_in_2b": 0,
-            "itc_ineligible": 0,
+            "itc_ineligible": len(CORRECTED_ITC_BLOCKED),
         }
     return {
         "exact": sample_count
@@ -116,7 +152,7 @@ def defects_for(variant: Gstr2bVariant) -> dict[str, int]:
 def get_gstr2b_payload(variant: Gstr2bVariant = "corrected") -> dict:
     sample = _load_sample()
     if variant == "corrected":
-        return sample
+        return _apply_corrected(sample)
     return _apply_inconsistent(sample)
 
 

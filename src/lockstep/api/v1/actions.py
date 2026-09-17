@@ -8,7 +8,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from lockstep.api.deps import get_current_user
 from lockstep.config import get_settings
 from lockstep.database import get_db
-from lockstep.models.enums import ActionType
+from lockstep.models.enums import AT_RISK_STATUSES, ActionType
 from lockstep.models.invoice import Invoice
 from lockstep.models.invoice_action import InvoiceAction
 from lockstep.models.period import ReconciliationPeriod
@@ -17,10 +17,13 @@ from lockstep.schemas.action import (
     ActionCreate,
     ActionOut,
     ActionProposalOut,
+    BulkNudgeOut,
+    BulkNudgeRequest,
     ThresholdsOut,
 )
 from lockstep.services import actions as action_service
 from lockstep.services.ai_summaries import draft_vendor_email
+from lockstep.services.dashboard import latest_check_id
 from lockstep.services.vendor_scoring import get_vendor_risk
 
 router = APIRouter(tags=["actions"])
@@ -113,6 +116,70 @@ async def create_action(
     await db.commit()
     await db.refresh(entry)
     return ActionOut.model_validate(entry)
+
+
+@router.post(
+    "/periods/{period_id}/actions/bulk-nudge",
+    response_model=BulkNudgeOut,
+    status_code=status.HTTP_201_CREATED,
+)
+async def bulk_nudge(
+    period_id: uuid.UUID,
+    body: BulkNudgeRequest,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """Record VENDOR_NOTIFIED on every at-risk invoice for the selected vendors.
+
+    Mock send only — same as single-invoice nudge. One commit for the whole batch.
+    """
+    period = await db.get(ReconciliationPeriod, period_id)
+    if period is None:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "Period not found")
+
+    if not body.vendor_ids:
+        raise HTTPException(status.HTTP_422_UNPROCESSABLE_ENTITY, "vendor_ids required")
+
+    check_id = body.check_id or await latest_check_id(db, period_id)
+    if check_id is None:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "No checks for this period")
+
+    invoices = (
+        await db.execute(
+            select(Invoice).where(
+                Invoice.period_id == period_id,
+                Invoice.check_id == check_id,
+                Invoice.vendor_id.in_(body.vendor_ids),
+                Invoice.status.in_(AT_RISK_STATUSES),
+                Invoice.source != "GSTR2B",
+            )
+        )
+    ).scalars().all()
+
+    action_ids: list[uuid.UUID] = []
+    nudged_vendor_ids: set[uuid.UUID] = set()
+    channel = body.channel or "email"
+
+    for invoice in invoices:
+        entry = await action_service.record(
+            db,
+            invoice,
+            ActionType.VENDOR_NOTIFIED,
+            user_id=current_user.id,
+            channel=channel,
+            payload={"bulk": True, "vendor_id": str(invoice.vendor_id)},
+        )
+        await db.flush()
+        action_ids.append(entry.id)
+        if invoice.vendor_id is not None:
+            nudged_vendor_ids.add(invoice.vendor_id)
+
+    await db.commit()
+    return BulkNudgeOut(
+        nudged_vendors=len(nudged_vendor_ids),
+        nudged_invoices=len(action_ids),
+        action_ids=action_ids,
+    )
 
 
 @router.get("/vendors/{vendor_id}/email-draft")
