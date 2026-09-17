@@ -16,11 +16,10 @@ proxies the government API preserves it verbatim.
 
 from __future__ import annotations
 
-import json
-from pathlib import Path
 from typing import Protocol
 
 from lockstep.core.exceptions import IngestionError, ValidationError
+from lockstep.services.mock_gstr2b import Gstr2bVariant, get_gstr2b_payload
 from lockstep.services.ingestion import (
     CanonicalRow,
     clerical_key,
@@ -98,26 +97,22 @@ class GSPClient(Protocol):
     (stub -> a real GSP subscription) never touches `parse_gsp_gstr2b_response` or
     anything downstream of it — both hand back the same envelope shape."""
 
-    async def fetch_gstr2b(self, gstin: str, tax_period: str) -> dict: ...
-
-
-#: The exact sample payload this adapter was built and tested against (see
-#: tests/test_gsp.py) — one file, so the stub used for live/manual testing and the
-#: fixture the unit tests assert against can never quietly drift apart.
-_SAMPLE_RESPONSE_PATH = (
-    Path(__file__).resolve().parents[3] / "tests" / "fixtures" / "gsp_gstr2b_sample.json"
-)
+    async def fetch_gstr2b(
+        self, gstin: str, tax_period: str, variant: Gstr2bVariant = "corrected",
+    ) -> dict: ...
 
 
 class StubGSPClient:
-    """Returns a fixed real sandbox response regardless of the GSTIN/period asked
-    for. Lets the whole fetch -> parse -> match -> persist pipeline be exercised
-    end-to-end without a GSP subscription — swap in a real `GSPClient` (Sandbox.co.in
-    et al., over HTTP) once one is available; nothing else in the pipeline changes.
+    """Returns a GSTN-shaped sandbox payload regardless of the GSTIN/period asked
+    for. `corrected` is the sample as-filed; `inconsistent` seeds demo mismatches.
+    Swap in a real `GSPClient` once a GSP subscription exists — the envelope stays.
     """
 
-    async def fetch_gstr2b(self, gstin: str, tax_period: str) -> dict:
-        return json.loads(_SAMPLE_RESPONSE_PATH.read_text())
+    async def fetch_gstr2b(
+        self, gstin: str, tax_period: str, variant: Gstr2bVariant = "corrected",
+    ) -> dict:
+        del gstin, tax_period
+        return get_gstr2b_payload(variant)
 
 
 def get_gsp_client() -> GSPClient:
