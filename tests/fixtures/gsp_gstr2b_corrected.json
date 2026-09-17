@@ -1,10 +1,10 @@
 {
   "code": 200,
-  "transaction_id": "lockstep-demo-inconsistent",
+  "transaction_id": "lockstep-demo-corrected",
   "data": {
     "status_cd": "1",
     "data": {
-      "chksum": "3b104b68d0ebc3c12c881ffaf9600d5677661e08aa4130d1df80c2e94aef0cee",
+      "chksum": "7a6c57dcddb0bfa22f3b5cbc261208ffdf8ec4c5edf0d5ed49eb3eba0f5ee6ef",
       "data": {
         "cpsumm": {
           "b2b": [
@@ -119,6 +119,17 @@
               "cess": 0.0
             },
             {
+              "ctin": "29AAECS6634P1ZK",
+              "trdnm": "Southern Industrial Gases Pvt Ltd",
+              "supprd": "092026",
+              "ttldocs": 4,
+              "txval": 39520.0,
+              "igst": 0.0,
+              "cgst": 3556.8,
+              "sgst": 3556.8,
+              "cess": 0.0
+            },
+            {
               "ctin": "19AABCH9902R1ZT",
               "trdnm": "Hindustan Abrasives Ltd",
               "supprd": "092026",
@@ -166,11 +177,11 @@
               "ctin": "29AAHCD8845Q1ZN",
               "trdnm": "Deccan Heat Treatment Works",
               "supprd": "092026",
-              "ttldocs": 2,
-              "txval": 18610.0,
+              "ttldocs": 3,
+              "txval": 33420.0,
               "igst": 0.0,
-              "cgst": 1116.6,
-              "sgst": 1116.6,
+              "cgst": 2005.2,
+              "sgst": 2005.2,
               "cess": 0.0
             },
             {
@@ -182,6 +193,17 @@
               "igst": 0.0,
               "cgst": 1185.8,
               "sgst": 1185.8,
+              "cess": 0.0
+            },
+            {
+              "ctin": "29AAACF8899T1Z2",
+              "trdnm": "FastTrack Cargo Services",
+              "supprd": "092026",
+              "ttldocs": 4,
+              "txval": 142240.0,
+              "igst": 0.0,
+              "cgst": 3556.0,
+              "sgst": 3556.0,
               "cess": 0.0
             },
             {
@@ -821,6 +843,78 @@
               ]
             },
             {
+              "ctin": "29AAECS6634P1ZK",
+              "trdnm": "Southern Industrial Gases Pvt Ltd",
+              "supprd": "092026",
+              "supfildt": "16-10-2026",
+              "inv": [
+                {
+                  "inum": "SIG/1027",
+                  "dt": "10-09-2026",
+                  "val": 11658.4,
+                  "txval": 9880.0,
+                  "igst": 0.0,
+                  "cgst": 889.2,
+                  "sgst": 889.2,
+                  "cess": 0.0,
+                  "pos": "29",
+                  "rev": "N",
+                  "typ": "R",
+                  "itcavl": "Y",
+                  "rsn": "",
+                  "imsStatus": "N"
+                },
+                {
+                  "inum": "SIG/1028",
+                  "dt": "10-09-2026",
+                  "val": 11658.4,
+                  "txval": 9880.0,
+                  "igst": 0.0,
+                  "cgst": 889.2,
+                  "sgst": 889.2,
+                  "cess": 0.0,
+                  "pos": "29",
+                  "rev": "N",
+                  "typ": "R",
+                  "itcavl": "Y",
+                  "rsn": "",
+                  "imsStatus": "N"
+                },
+                {
+                  "inum": "SIG/1029",
+                  "dt": "15-09-2026",
+                  "val": 11658.4,
+                  "txval": 9880.0,
+                  "igst": 0.0,
+                  "cgst": 889.2,
+                  "sgst": 889.2,
+                  "cess": 0.0,
+                  "pos": "29",
+                  "rev": "N",
+                  "typ": "R",
+                  "itcavl": "Y",
+                  "rsn": "",
+                  "imsStatus": "N"
+                },
+                {
+                  "inum": "SIG/1030",
+                  "dt": "03-09-2026",
+                  "val": 11658.4,
+                  "txval": 9880.0,
+                  "igst": 0.0,
+                  "cgst": 889.2,
+                  "sgst": 889.2,
+                  "cess": 0.0,
+                  "pos": "29",
+                  "rev": "N",
+                  "typ": "R",
+                  "itcavl": "Y",
+                  "rsn": "",
+                  "imsStatus": "N"
+                }
+              ]
+            },
+            {
               "ctin": "19AABCH9902R1ZT",
               "trdnm": "Hindustan Abrasives Ltd",
               "supprd": "092026",
@@ -1032,8 +1126,24 @@
               "ctin": "29AAHCD8845Q1ZN",
               "trdnm": "Deccan Heat Treatment Works",
               "supprd": "092026",
-              "supfildt": "10-10-2026",
+              "supfildt": "16-10-2026",
               "inv": [
+                {
+                  "inum": "DHT/1042",
+                  "dt": "04-09-2026",
+                  "val": 16587.2,
+                  "txval": 14810.0,
+                  "igst": 0.0,
+                  "cgst": 888.6,
+                  "sgst": 888.6,
+                  "cess": 0.0,
+                  "pos": "29",
+                  "rev": "N",
+                  "typ": "R",
+                  "itcavl": "Y",
+                  "rsn": "",
+                  "imsStatus": "N"
+                },
                 {
                   "inum": "DHT/1043",
                   "dt": "04-09-2026",
@@ -1130,6 +1240,78 @@
                   "igst": 0.0,
                   "cgst": 76.2,
                   "sgst": 76.2,
+                  "cess": 0.0,
+                  "pos": "29",
+                  "rev": "N",
+                  "typ": "R",
+                  "itcavl": "Y",
+                  "rsn": "",
+                  "imsStatus": "N"
+                }
+              ]
+            },
+            {
+              "ctin": "29AAACF8899T1Z2",
+              "trdnm": "FastTrack Cargo Services",
+              "supprd": "092026",
+              "supfildt": "16-10-2026",
+              "inv": [
+                {
+                  "inum": "FTC/BL/1049",
+                  "dt": "27-09-2026",
+                  "val": 37338.0,
+                  "txval": 35560.0,
+                  "igst": 0.0,
+                  "cgst": 889.0,
+                  "sgst": 889.0,
+                  "cess": 0.0,
+                  "pos": "29",
+                  "rev": "N",
+                  "typ": "R",
+                  "itcavl": "Y",
+                  "rsn": "",
+                  "imsStatus": "N"
+                },
+                {
+                  "inum": "FTC/BL/1050",
+                  "dt": "02-09-2026",
+                  "val": 37338.0,
+                  "txval": 35560.0,
+                  "igst": 0.0,
+                  "cgst": 889.0,
+                  "sgst": 889.0,
+                  "cess": 0.0,
+                  "pos": "29",
+                  "rev": "N",
+                  "typ": "R",
+                  "itcavl": "Y",
+                  "rsn": "",
+                  "imsStatus": "N"
+                },
+                {
+                  "inum": "FTC/BL/1051",
+                  "dt": "03-09-2026",
+                  "val": 37338.0,
+                  "txval": 35560.0,
+                  "igst": 0.0,
+                  "cgst": 889.0,
+                  "sgst": 889.0,
+                  "cess": 0.0,
+                  "pos": "29",
+                  "rev": "N",
+                  "typ": "R",
+                  "itcavl": "Y",
+                  "rsn": "",
+                  "imsStatus": "N"
+                },
+                {
+                  "inum": "FTC/BL/1052",
+                  "dt": "08-09-2026",
+                  "val": 37338.0,
+                  "txval": 35560.0,
+                  "igst": 0.0,
+                  "cgst": 889.0,
+                  "sgst": 889.0,
                   "cess": 0.0,
                   "pos": "29",
                   "rev": "N",

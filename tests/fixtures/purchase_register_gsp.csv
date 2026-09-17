@@ -1,0 +1,81 @@
+Date,Particulars,Buyer/Supplier,GSTIN,Voucher Type,Voucher No.,Voucher Ref. No.,Voucher Ref. Date,Narration,Gross Total,IGST Input,CGST Input,SGST Input
+2026-09-26,Raw material,Steelcraft Industries Ltd,27AAACS9876K1Z1,Purchase,PV-STEELCRAFT-01,SCI/PO/1001,2026-09-26,Raw material - September,71130.40,10850.40,0.00,0.00
+2026-10-01,Raw material,Steelcraft Industries Ltd,27AAACS9876K1Z1,Purchase,PV-STEELCRAFT-02,SCI/PO/1002,2026-09-27,Raw material - September,74363.60,11343.60,0.00,0.00
+2026-09-14,Raw material,Steelcraft Industries Ltd,27AAACS9876K1Z1,Purchase,PV-STEELCRAFT-03,SCI/PO/1003,2026-09-10,Raw material - September,59000.00,9000.00,0.00,0.00
+2026-09-12,Castings,Bharat Heavy Works,27AAACB1199H1Z3,Purchase,PV-BHARAT-01,BHW/SP/1004,2026-09-11,Castings - September,32780.40,5000.40,0.00,0.00
+2026-09-29,Castings,Bharat Heavy Works,27AAACB1199H1Z3,Purchase,PV-BHARAT-02,BHW/SP/1005,2026-09-27,Castings - September,66646.40,10166.40,0.00,0.00
+2026-09-11,Forgings,Anand Forgings Pvt Ltd,24AABCA4471K1ZQ,Purchase,PV-ANAND-01,AF-2425-1006,2026-09-09,Forgings - September,32780.40,5000.40,0.00,0.00
+2026-09-15,Forgings,Anand Forgings Pvt Ltd,24AABCA4471K1ZQ,Purchase,PV-ANAND-02,AF-2425-1007,2026-09-11,Forgings - September,21004.00,3204.00,0.00,0.00
+2026-09-17,Forgings,Anand Forgings Pvt Ltd,24AABCA4471K1ZQ,Purchase,PV-ANAND-03,AF-2425-1008,2026-09-14,Forgings - September,25004.20,3814.20,0.00,0.00
+2026-09-20,Aluminium extrusion,Coromandel Alloys Pvt Ltd,33AAECC7781M1ZB,Purchase,PV-COROMANDEL-01,CAP/1009,2026-09-20,Aluminium extrusion - September,19009.80,2899.80,0.00,0.00
+2026-09-23,Aluminium extrusion,Coromandel Alloys Pvt Ltd,33AAECC7781M1ZB,Purchase,PV-COROMANDEL-02,CAP/1010,2026-09-20,Aluminium extrusion - September,36827.80,5617.80,0.00,0.00
+2026-09-01,Copper wire,Sundaram Copper Works,33AAFCS2290J1ZR,Purchase,PV-SUNDARAM-01,SCW-1011,2026-09-01,Copper wire - September,32780.40,5000.40,0.00,0.00
+2026-09-21,Copper wire,Sundaram Copper Works,33AAFCS2290J1ZR,Purchase,PV-SUNDARAM-02,SCW-1012,2026-09-18,Copper wire - September,32780.40,5000.40,0.00,0.00
+2026-09-20,Polymer resin,Gujarat Polymers Ltd,24AAACG8812N1ZD,Purchase,PV-GUJPOLY-01,GPL/24-25/1013,2026-09-20,Polymer resin - September,12272.00,1872.00,0.00,0.00
+2026-09-15,Polymer resin,Gujarat Polymers Ltd,24AAACG8812N1ZD,Purchase,PV-GUJPOLY-02,GPL/24-25/1014,2026-09-15,Polymer resin - September,37111.00,5661.00,0.00,0.00
+2026-09-24,Fasteners,Precision Fasteners Pvt Ltd,29AAGCP5512L1Z4,Purchase,PV-FASTENERS-01,PF-1015,2026-09-20,Fasteners - September,10820.60,0.00,825.30,825.30
+2026-09-06,Fasteners,Precision Fasteners Pvt Ltd,29AAGCP5512L1Z4,Purchase,PV-FASTENERS-02,PF-1016,2026-09-03,Fasteners - September,10136.20,0.00,773.10,773.10
+2026-09-17,Fasteners,Precision Fasteners Pvt Ltd,29AAGCP5512L1Z4,Purchase,PV-FASTENERS-03,PF-1017,2026-09-15,Fasteners - September,7245.20,0.00,552.60,552.60
+2026-09-29,Bearings,Karnataka Bearings and Seals,29AAJCK3390B1ZW,Purchase,PV-BEARINGS-01,KBS/1018,2026-09-26,Bearings - September,5746.60,0.00,438.30,438.30
+2026-09-07,Bearings,Karnataka Bearings and Seals,29AAJCK3390B1ZW,Purchase,PV-BEARINGS-02,KBS/1019,2026-09-07,Bearings - September,6265.80,0.00,477.90,477.90
+2026-09-10,Bearings,Karnataka Bearings and Seals,29AAJCK3390B1ZW,Purchase,PV-BEARINGS-03,KBS/1020,2026-09-10,Bearings - September,3599.00,0.00,274.50,274.50
+2026-09-13,Electricals,Laxmi Electricals and Trading Co,29AAACL5544G1Z9,Purchase,PV-LAXMI-01,LET/INV/1021,2026-09-13,Electricals - September,28261.00,0.00,2155.50,2155.50
+2026-09-02,Electricals,Laxmi Electricals and Trading Co,29AAACL5544G1Z9,Purchase,PV-LAXMI-02,LET/INV/1022,2026-09-01,Electricals - September,26845.00,0.00,2047.50,2047.50
+2026-09-12,IT hardware,DigiWorld Systems Pvt Ltd,29AAACD2233W1Z6,Purchase,PV-DIGIWORLD-01,DWS-24-1023,2026-09-09,IT hardware - September,27411.40,0.00,2090.70,2090.70
+2026-09-13,IT hardware,DigiWorld Systems Pvt Ltd,29AAACD2233W1Z6,Purchase,PV-DIGIWORLD-02,DWS-24-1024,2026-09-09,IT hardware - September,21346.20,0.00,1628.10,1628.10
+2026-09-06,Industrial chemicals,Apex Chemicals Pvt Ltd,36AAACA7766X1Z8,Purchase,PV-APEX-01,APEX-1025,2026-09-05,Industrial chemicals - September,25582.40,3902.40,0.00,0.00
+2026-09-19,Industrial chemicals,Apex Chemicals Pvt Ltd,36AAACA7766X1Z8,Purchase,PV-APEX-02,APEX-1026,2026-09-18,Industrial chemicals - September,35034.20,5344.20,0.00,0.00
+2026-09-13,Industrial gases,Southern Industrial Gases Pvt Ltd,29AAECS6634P1ZK,Purchase,PV-GASES-01,SIG/1027,2026-09-10,Canteen gas cylinders - staff canteen,11658.40,0.00,889.20,889.20
+2026-09-12,Industrial gases,Southern Industrial Gases Pvt Ltd,29AAECS6634P1ZK,Purchase,PV-GASES-02,SIG/1028,2026-09-10,Industrial gases - September,11658.40,0.00,889.20,889.20
+2026-09-19,Industrial gases,Southern Industrial Gases Pvt Ltd,29AAECS6634P1ZK,Purchase,PV-GASES-03,SIG/1029,2026-09-15,Industrial gases - September,11658.40,0.00,889.20,889.20
+2026-09-05,Industrial gases,Southern Industrial Gases Pvt Ltd,29AAECS6634P1ZK,Purchase,PV-GASES-04,SIG/1030,2026-09-03,Industrial gases - September,11658.40,0.00,889.20,889.20
+2026-09-10,Abrasives,Hindustan Abrasives Ltd,19AABCH9902R1ZT,Purchase,PV-ABRASIVES-01,HAL-1031,2026-09-10,Abrasives - September,9770.40,1490.40,0.00,0.00
+2026-09-20,Abrasives,Hindustan Abrasives Ltd,19AABCH9902R1ZT,Purchase,PV-ABRASIVES-02,HAL-1032,2026-09-17,Abrasives - September,6903.00,1053.00,0.00,0.00
+2026-09-25,Welding consumables,Weldwell Electrodes Pvt Ltd,23AAFCW1123D1ZG,Purchase,PV-WELDWELL-01,WE/24/1033,2026-09-21,Welding consumables - September,6254.00,954.00,0.00,0.00
+2026-09-12,Welding consumables,Weldwell Electrodes Pvt Ltd,23AAFCW1123D1ZG,Purchase,PV-WELDWELL-02,WE/24/1034,2026-09-08,Welding consumables - September,11575.80,1765.80,0.00,0.00
+2026-09-09,Welding consumables,Weldwell Electrodes Pvt Ltd,23AAFCW1123D1ZG,Purchase,PV-WELDWELL-03,WE/24/1035,2026-09-06,Welding consumables - September,6596.20,1006.20,0.00,0.00
+2026-09-12,Packaging,GreenPack Solutions,29AAACG4455S1Z7,Purchase,PV-GREENPACK-01,GPS-2024-1036,2026-09-09,Packaging - September,4436.80,0.00,338.40,338.40
+2026-09-15,Packaging,GreenPack Solutions,29AAACG4455S1Z7,Purchase,PV-GREENPACK-02,GPS-2024-1037,2026-09-13,Packaging - September,11115.60,0.00,847.80,847.80
+2026-09-28,Packaging,GreenPack Solutions,29AAACG4455S1Z7,Purchase,PV-GREENPACK-03,GPS-2024-1038,2026-09-25,Packaging - September,10431.20,0.00,795.60,795.60
+2026-09-18,Stationery,Prestige Stationery House,29AAABP1234M1Z8,Purchase,PV-PRESTIGE-01,PSH-1039,2026-09-18,Stationery - September,5051.20,0.00,270.60,270.60
+2026-09-08,Stationery,Prestige Stationery House,29AAABP1234M1Z8,Purchase,PV-PRESTIGE-02,PSH-1040,2026-09-08,Stationery - September,10953.60,0.00,586.80,586.80
+2026-09-27,Stationery,Prestige Stationery House,29AAABP1234M1Z8,Purchase,PV-PRESTIGE-03,PSH-1041,2026-09-24,Stationery - September,6764.80,0.00,362.40,362.40
+2026-09-06,Heat treatment,Deccan Heat Treatment Works,29AAHCD8845Q1ZN,Purchase,PV-DECCAN-01,DHT/1042,2026-09-04,Heat treatment - September,16587.20,0.00,888.60,888.60
+2026-09-04,Heat treatment,Deccan Heat Treatment Works,29AAHCD8845Q1ZN,Purchase,PV-DECCAN-02,DHT/1043,2026-09-04,Heat treatment - September,9878.40,0.00,529.20,529.20
+2026-09-19,Heat treatment,Deccan Heat Treatment Works,29AAHCD8845Q1ZN,Purchase,PV-DECCAN-03,DHT/1044,2026-09-16,Heat treatment - September,10964.80,0.00,587.40,587.40
+2026-09-16,Machining job work,Nandi Precision Machining,29AAGCN2218F1ZY,Purchase,PV-NANDI-01,NPM-1045,2026-09-13,Machining job work - September,5588.80,0.00,299.40,299.40
+2026-09-11,Machining job work,Nandi Precision Machining,29AAGCN2218F1ZY,Purchase,PV-NANDI-02,NPM-1046,2026-09-08,Machining job work - September,3931.20,0.00,210.60,210.60
+2026-09-18,Machining job work,Nandi Precision Machining,29AAGCN2218F1ZY,Purchase,PV-NANDI-03,NPM-1047,2026-09-15,Machining job work - September,10259.20,0.00,549.60,549.60
+2026-09-18,Machining job work,Nandi Precision Machining,29AAGCN2218F1ZY,Purchase,PV-NANDI-04,NPM-1048,2026-09-15,Machining job work - September,1422.40,0.00,76.20,76.20
+2026-10-01,Freight,FastTrack Cargo Services,29AAACF8899T1Z2,Purchase,PV-FASTTRACK-01,FTC/BL/1049,2026-09-27,Freight - September,37338.00,0.00,889.00,889.00
+2026-09-04,Freight,FastTrack Cargo Services,29AAACF8899T1Z2,Purchase,PV-FASTTRACK-02,FTC/BL/1050,2026-09-02,Freight - September,37338.00,0.00,889.00,889.00
+2026-09-03,Freight,FastTrack Cargo Services,29AAACF8899T1Z2,Purchase,PV-FASTTRACK-03,FTC/BL/1051,2026-09-03,Freight - September,37338.00,0.00,889.00,889.00
+2026-09-11,Freight,FastTrack Cargo Services,29AAACF8899T1Z2,Purchase,PV-FASTTRACK-04,FTC/BL/1052,2026-09-08,Freight - September,37338.00,0.00,889.00,889.00
+2026-09-18,Material testing,Sai Analytical Labs,29AALCS7712H1ZM,Purchase,PV-SAI-01,SAL/RPT/1053,2026-09-16,Material testing - September,5994.40,0.00,457.20,457.20
+2026-09-10,Material testing,Sai Analytical Labs,29AALCS7712H1ZM,Purchase,PV-SAI-02,SAL/RPT/1054,2026-09-07,Material testing - September,5581.40,0.00,425.70,425.70
+2026-09-08,Factory rent,Horizon Realty Partners,29AAACH7788R1Z4,Purchase,PV-HORIZON-01,HRP/RENT/1055,2026-09-06,Factory rent - September,32780.40,0.00,2500.20,2500.20
+2026-09-04,Factory rent,Horizon Realty Partners,29AAACH7788R1Z4,Purchase,PV-HORIZON-02,HRP/RENT/1056,2026-09-03,Factory rent - September,114294.80,0.00,8717.40,8717.40
+2026-09-24,Canteen,Annapurna Food Services,29AAFCA3321V1ZE,Purchase,PV-ANNAPURNA-01,AFS/INV/1057,2026-09-23,Monthly canteen contract - outdoor catering,3276.00,0.00,78.00,78.00
+2026-09-19,Canteen,Annapurna Food Services,29AAFCA3321V1ZE,Purchase,PV-ANNAPURNA-02,AFS/INV/1058,2026-09-18,Canteen - September,7560.00,0.00,180.00,180.00
+2026-09-16,Hotel stay,Mumbai Stay Suites Pvt Ltd,27AAJCM5567T1ZP,Purchase,PV-MUMBAISTAY-01,MSS/1059,2026-09-13,Hotel stay - Mumbai site visit,34420.60,5250.60,0.00,0.00
+2026-09-14,Employee cab,CityRide Fleet Services,29AAKCC8890L1ZX,Purchase,PV-CITYRIDE-01,CRF-1060,2026-09-10,Rent-a-cab for client visit,7155.20,0.00,782.60,782.60
+2026-09-26,Works contract,Meridian Interiors LLP,29AAEFM4432C1ZJ,Purchase,PV-MERIDIAN-01,MI/24-25/1061,2026-09-26,Office civil works - works contract,23611.80,0.00,1800.90,1800.90
+2026-09-05,Cloud hosting,AMAZON WEB SERVICES INDIA PRIVATE LIMITED,07AAJCA9880A1ZL,Purchase,PV-AWS-01,AIN2425002587878,2026-09-02,AWS September usage,81691.31,12461.39,0.00,0.00
+2026-09-05,Cloud hosting,AMAZON WEB SERVICES INDIA PRIVATE LIMITED,07AAJCA9880A1ZL,Purchase,PV-AWS-02,AIN2425002501063,2026-09-03,Cloud hosting - September,39435.60,6015.60,0.00,0.00
+2026-09-18,Cloud hosting,AMAZON WEB SERVICES INDIA PRIVATE LIMITED,07AAJCA9880A1ZL,Purchase,PV-AWS-03,AIN2425002501064,2026-09-16,Cloud hosting - September,92665.40,14135.40,0.00,0.00
+2026-09-21,Advertising,GOOGLE INDIA PVT LTD,06AACCG0527D1Z8,Purchase,PV-GOOGLE-01,GINV-2024-01065,2026-09-20,Advertising - September,6643.40,1013.40,0.00,0.00
+2026-09-19,Advertising,GOOGLE INDIA PVT LTD,06AACCG0527D1Z8,Purchase,PV-GOOGLE-02,GINV-2024-01066,2026-09-18,Advertising - September,11505.00,1755.00,0.00,0.00
+2026-09-05,Telecom,JIO PLATFORMS LIMITED,29AAECJ6878N1ZU,Purchase,PV-JIO-01,C24E242500023146,2026-09-05,Jio Platforms,5665.42,0.00,432.11,432.11
+2026-09-03,Telecom,JIO PLATFORMS LIMITED,29AAECJ6878N1ZU,Purchase,PV-JIO-02,C24E242500001068,2026-09-03,Telecom - September,5841.00,0.00,445.50,445.50
+2026-09-07,Telecom,Reliance Jio Infocomm Limited,29AABCI6363G1ZP,Purchase,PV-RJIO-01,RJI-2425-01069,2026-09-03,Telecom - September,10454.80,0.00,797.40,797.40
+2026-09-14,Telecom,Reliance Jio Infocomm Limited,29AABCI6363G1ZP,Purchase,PV-RJIO-02,RJI-2425-01070,2026-09-11,Telecom - September,11516.80,0.00,878.40,878.40
+2026-09-02,SaaS,ZOHO CORPORATION PRIVATE LIMITED,33AAACZ4322M2Z9,Purchase,PV-ZOHO-01,ZOHO-INV-24112,2026-09-01,Zoho subscription,1888.00,288.00,0.00,0.00
+2026-09-28,SaaS,ZOHO CORPORATION PRIVATE LIMITED,33AAACZ4322M2Z9,Purchase,PV-ZOHO-02,ZOHO-INV-01072,2026-09-25,SaaS - September,1982.40,302.40,0.00,0.00
+2026-09-08,IT hardware,I TECH STORE,29AACFI9070L1Z5,Purchase,PV-ITECH-01,IT/24-25/978,2026-09-08,IT equipment,2599.98,0.00,198.30,198.30
+2026-09-23,IT hardware,I TECH STORE,29AACFI9070L1Z5,Purchase,PV-ITECH-02,IT/24-25/1074,2026-09-22,IT hardware - September,3764.20,0.00,287.10,287.10
+2026-09-15,Software,DIGITAP.AI ENTERPRISE SOLUTIONS PRIVATE LIMITED,29AAHCD5090M1Z3,Purchase,PV-DIGITAP-01,2024-25/DIG01075,2026-09-14,Software - September,20260.60,0.00,1545.30,1545.30
+2026-09-10,Software,DIGITAP.AI ENTERPRISE SOLUTIONS PRIVATE LIMITED,29AAHCD5090M1Z3,Purchase,PV-DIGITAP-02,2024-25/DIG01076,2026-09-06,Software - September,36733.40,0.00,2801.70,2801.70
+2026-09-12,Software,Grey Swift Private Limited,06AAGCG5872M1Z3,Purchase,PV-GREYSWIFT-01,LE/25/1/01077,2026-09-09,Software - September,7528.40,1148.40,0.00,0.00
+2026-09-09,Software,Grey Swift Private Limited,06AAGCG5872M1Z3,Purchase,PV-GREYSWIFT-02,LE/25/1/01078,2026-09-07,Software - September,11717.40,1787.40,0.00,0.00
+2026-09-13,Cloud hosting,Google Cloud India Private Limited,27AAGCG4576J1Z6,Purchase,PV-GCLOUD-01,GCP-01079,2026-09-12,Cloud hosting - September,8012.20,1222.20,0.00,0.00
+2026-09-27,Office catering,GOURMESSERIE LLP,29AAWFG9936H1ZP,Purchase,PV-GOURMESSERIE-01,PRN-1080,2026-09-27,Office catering - September,9502.50,0.00,226.25,226.25
